@@ -90,7 +90,28 @@ def init_db(db_name, db_user, db_pass):
 def write_entry(db_obj, data):
     db_cursor = db_obj.cursor()
     # Write entry to DB
-    sql = "INSERT INTO competitors (first_name,last_name,email,phone,address1,address2,city,state,zip,birthdate,age,gender,weight,school,coach,belt,events) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    sql = """
+    INSERT INTO competitors (
+        first_name,
+        last_name,
+        email,
+        phone,
+        address1,
+        address2,
+        city,
+        state,
+        zip,
+        birthdate,
+        age,
+        gender,
+        weight,
+        school,
+        coach,
+        belt,
+        events
+    )
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
     val = (
         data["fname"],
         data["lname"],
