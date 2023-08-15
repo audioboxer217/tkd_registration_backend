@@ -159,14 +159,17 @@ if __name__ == "__main__":
     db_obj = connect_db()
 
     entries = glob("/data/*.json")
-    print(f"Processing {len(entries)} entries")
+    if len(entries) > 0:
+        print(f"Processing {len(entries)} entries")
 
-    for json_file in entries:
-        # Read JSON
-        with open(json_file, "r") as f:
-            data = json.load(f)
-            write_entry(db_obj, data)
-            print(f"{data['fname']} {data['lname']} added")
-        os.rename(json_file, f"{processed_dir}/{os.path.basename(json_file)}")
+        for json_file in entries:
+            # Read JSON
+            with open(json_file, "r") as f:
+                data = json.load(f)
+                write_entry(db_obj, data)
+                print(f"{data['fname']} {data['lname']} added")
+            os.rename(json_file, f"{processed_dir}/{os.path.basename(json_file)}")
+    else:
+        print("Currently no entries to process. Waiting...")
 
-    sleep(600)
+    sleep(60)
