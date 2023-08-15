@@ -59,7 +59,7 @@ def init_db(db_name, db_user, db_pass):
         birthdate CHAR(10),
         age int(2),
         gender VARCHAR(255),
-        weight decimal(5),
+        weight decimal(5,2),
         school VARCHAR(255),
         coach VARCHAR(255),
         belt VARCHAR(255),
