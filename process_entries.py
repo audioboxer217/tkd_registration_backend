@@ -89,30 +89,20 @@ def init_db(db_name, db_user, db_pass):
 
 def write_entry(db_obj, data):
     db_cursor = db_obj.cursor()
-    # Write entry to DB
-    sql = """
-    INSERT INTO competitors (
-        first_name,
-        last_name,
-        email,
-        phone,
-        address1,
-        address2,
-        city,
-        state,
-        zip,
-        birthdate,
-        age,
-        gender,
-        weight,
-        school,
-        coach,
-        belt,
-        events
+    # Generate SQL
+    fields = (
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "address1",
+        "address2",
+        "city",
+        "state",
+        "zip",
+        "school",
     )
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    val = (
+    vals = (
         data["fname"],
         data["lname"],
         data["email"],
@@ -122,16 +112,37 @@ def write_entry(db_obj, data):
         data["city"],
         data["state"],
         data["zip"],
-        data["birthdate"],
-        data["age"],
-        data["gender"],
-        data["weight"],
         data["school"],
-        data["coach"],
-        data["beltRank"],
-        data["events"],
     )
-    db_cursor.execute(sql, val)
+    if data["reg_type"] == "competitor":
+        db_name = "competitors"
+        fields += (
+            "birthdate",
+            "age",
+            "gender",
+            "weight",
+            "coach",
+            "belt",
+            "events",
+        )
+        vals += (
+            data["birthdate"],
+            data["age"],
+            data["gender"],
+            data["weight"],
+            data["coach"],
+            data["beltRank"],
+            data["events"],
+        )
+    else:
+        db_name = "coaches"
+
+    # Write entry to DB
+    sql = f"""
+    INSERT INTO {db_name} ({','.join(fields)})
+    VALUES ('{"','".join(vals)}')
+    """
+    db_cursor.execute(sql)
     db_obj.commit()
     print(db_cursor.rowcount, "record inserted.")
 
