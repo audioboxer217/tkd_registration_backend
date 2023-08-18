@@ -1,10 +1,10 @@
-import mysql.connector
-import json
 import os
+import ssl
+import json
+import smtplib
+import mysql.connector
 from glob import glob
 from time import sleep
-import ssl
-import smtplib
 from email.message import EmailMessage
 
 
