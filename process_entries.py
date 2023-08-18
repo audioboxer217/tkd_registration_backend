@@ -3,6 +3,9 @@ import json
 import os
 from glob import glob
 from time import sleep
+import ssl
+import smtplib
+from email.message import EmailMessage
 
 
 def connect_db():
@@ -149,13 +152,52 @@ def write_entry(db_obj, data):
     return True
 
 
+def send_email(data):
+    comp_year = os.environ.get("COMPETITION_YEAR")
+    comp_name = os.environ.get("COMPETITION_NAME")
+    email_sender = os.environ.get("FROM_EMAIL").strip("'")
+    email_password = os.environ.get("EMAIL_PASSWD").strip("'")
+    email_receiver = data["email"]
+    subject = f"{comp_year} {comp_name} Registration"
+
+    body = f"""
+        Dear {data['fname']} {data['lname']},
+
+        Thank you for being a part of {comp_year} {comp_name}!
+
+        Your registration for the {comp_year} {comp_name} has been accepted.
+
+        Your ID-Card has been attached with this email. Print your ID-Card and bring it to the tournament venue in order to compete.
+
+        If you have any questions please contact us at contacttulsa@goldendragontkd.com
+
+        Warm Regards,
+        Golden Dragon TKD
+        """
+
+    em = EmailMessage()
+    em["From"] = email_sender
+    em["To"] = email_receiver
+    em["Subject"] = subject
+    em.set_content(body)
+
+    # Add SSL (layer of security)
+    context = ssl.create_default_context()
+
+    # Log in and send the email
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+        smtp.login(email_sender, email_password)
+        smtp.sendmail(email_sender, email_receiver, em.as_string())
+        print("Mail Sent!")
+
+
 if __name__ == "__main__":
     # Ensure 'processed' dir exists
     processed_dir = "/data/processed"
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
 
-    # Connect to DB
+    Connect to DB
     db_obj = connect_db()
 
     entries = glob("/data/*.json")
@@ -168,6 +210,7 @@ if __name__ == "__main__":
                 data = json.load(f)
                 write_entry(db_obj, data)
                 print(f"{data['fname']} {data['lname']} added")
+                send_email(data)
             os.rename(json_file, f"{processed_dir}/{os.path.basename(json_file)}")
     else:
         print("Currently no entries to process. Waiting...")
