@@ -50,42 +50,55 @@ def init_db(db_name, db_user, db_pass):
     # Create Tables
     competitors_table = """
     CREATE TABLE competitors (
-        first_name VARCHAR(255),
-        last_name VARCHAR(255),
-        email VARCHAR(255),
-        phone VARCHAR(255),
-        address1 VARCHAR(255),
+        id int(3) UNIQUE NOT NULL AUTO_INCREMENT,
+        first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(255) NOT NULL,
+        address1 VARCHAR(255) NOT NULL,
         address2 VARCHAR(255),
-        city VARCHAR(255),
-        state CHAR(2),
-        zip int(5),
-        birthdate CHAR(10),
-        age int(2),
-        gender VARCHAR(255),
-        weight decimal(5,2),
-        school VARCHAR(255),
-        coach VARCHAR(255),
-        belt VARCHAR(255),
-        events SET('Sparring', 'Poomsae', 'Team Poomsae', 'Demonstration')
+        city VARCHAR(255) NOT NULL,
+        state CHAR(2) NOT NULL,
+        zip int(5) NOT NULL,
+        birthdate CHAR(10) NOT NULL,
+        age int(2) NOT NULL,
+        gender VARCHAR(255) NOT NULL,
+        weight decimal(5,2) NOT NULL,
+        school VARCHAR(255) NOT NULL,
+        coach VARCHAR(255) NOT NULL,
+        belt VARCHAR(255) NOT NULL,
+        events SET(
+            'Sparring',
+            'Poomsae',
+            'Team Poomsae',
+            'Demonstration'
+            ) NOT NULL,
+        PRIMARY KEY (id),
+        CONSTRAINT full_name UNIQUE (first_name,last_name)
     )
     """
 
     coaches_table = """
     CREATE TABLE coaches (
-        first_name VARCHAR(255),
-        last_name VARCHAR(255),
-        email VARCHAR(255),
-        phone VARCHAR(255),
-        address1 VARCHAR(255),
+        id int(3) UNIQUE NOT NULL AUTO_INCREMENT,
+        first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(255) NOT NULL,
+        address1 VARCHAR(255) NOT NULL,
         address2 VARCHAR(255),
-        city VARCHAR(255),
-        state CHAR(2),
-        zip int(5),
-        school VARCHAR(255)
+        city VARCHAR(255) NOT NULL,
+        state CHAR(2) NOT NULL,
+        zip int(5) NOT NULL,
+        school VARCHAR(255) NOT NULL,
+        PRIMARY KEY (id),
+        CONSTRAINT full_name UNIQUE (first_name,last_name)
     )
     """
     mycursor.execute(competitors_table)
+    mycursor.execute("ALTER TABLE competitors AUTO_INCREMENT=100")
     mycursor.execute(coaches_table)
+    mycursor.execute("ALTER TABLE coaches AUTO_INCREMENT=900")
 
     return mydb
 
