@@ -197,7 +197,7 @@ if __name__ == "__main__":
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
 
-    Connect to DB
+    # Connect to DB
     db_obj = connect_db()
 
     entries = glob("/data/*.json")
