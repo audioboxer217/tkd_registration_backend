@@ -155,25 +155,27 @@ def write_entry(db_obj, data):
 def send_email(data):
     comp_year = os.environ.get("COMPETITION_YEAR")
     comp_name = os.environ.get("COMPETITION_NAME")
-    email_sender = os.environ.get("FROM_EMAIL").strip("'")
-    email_password = os.environ.get("EMAIL_PASSWD").strip("'")
+    email_sender = os.environ.get("FROM_EMAIL")
+    email_password = os.environ.get("EMAIL_PASSWD")
+    contact_email = os.environ.get("CONTACT_EMAIL")
     email_receiver = data["email"]
     subject = f"{comp_year} {comp_name} Registration"
 
     body = f"""
-        Dear {data['fname']} {data['lname']},
+Dear {data['fname']} {data['lname']},
 
-        Thank you for being a part of {comp_year} {comp_name}!
+Thank you for being a part of {comp_year} {comp_name}!
 
-        Your registration for the {comp_year} {comp_name} has been accepted.
+Your registration for the {comp_year} {comp_name} has been accepted.
 
-        Your ID-Card has been attached with this email. Print your ID-Card and bring it to the tournament venue in order to compete.
+Your ID-Card has been attached with this email. Print your ID-Card \
+and bring it to the tournament venue in order to compete.
 
-        If you have any questions please contact us at contacttulsa@goldendragontkd.com
+If you have any questions please contact us at {contact_email}
 
-        Warm Regards,
-        Golden Dragon TKD
-        """
+Warm Regards,
+Golden Dragon TKD
+"""
 
     em = EmailMessage()
     em["From"] = email_sender
@@ -211,7 +213,8 @@ if __name__ == "__main__":
                 write_entry(db_obj, data)
                 print(f"{data['fname']} {data['lname']} added")
                 send_email(data)
-            os.rename(json_file, f"{processed_dir}/{os.path.basename(json_file)}")
+            new_path = f"{processed_dir}/{os.path.basename(json_file)}"
+            os.rename(json_file, new_path)
     else:
         print("Currently no entries to process. Waiting...")
 
