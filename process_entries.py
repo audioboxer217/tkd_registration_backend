@@ -164,7 +164,7 @@ def write_entry(db_obj, data):
     db_obj.commit()
     print(db_cursor.rowcount, "record inserted.")
 
-    return True
+    return db_cursor.lastrowid
 
 
 def send_email(data):
@@ -225,8 +225,8 @@ if __name__ == "__main__":
             # Read JSON
             with open(json_file, "r") as f:
                 data = json.load(f)
-                write_entry(db_obj, data)
-                print(f"{data['fname']} {data['lname']} added")
+                entry = write_entry(db_obj, data)
+                print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
                 send_email(data)
             new_path = f"{processed_dir}/{os.path.basename(json_file)}"
             os.rename(json_file, new_path)
