@@ -6,6 +6,7 @@ import mysql.connector
 from glob import glob
 from time import sleep
 from email.message import EmailMessage
+from PIL import Image, ImageDraw, ImageFont
 
 
 def connect_db():
@@ -64,6 +65,7 @@ def init_db(db_name, db_user, db_pass):
         age int(2) NOT NULL,
         gender VARCHAR(255) NOT NULL,
         weight decimal(5,2) NOT NULL,
+        profile_img VARCHAR(255) NOT NULL,
         school VARCHAR(255) NOT NULL,
         coach VARCHAR(255) NOT NULL,
         belt VARCHAR(255) NOT NULL,
@@ -177,20 +179,20 @@ def send_email(data):
     subject = f"{comp_year} {comp_name} Registration"
 
     body = f"""
-Dear {data['fname']} {data['lname']},
+    Dear {data['fname']} {data['lname']},
 
-Thank you for being a part of {comp_year} {comp_name}!
+    Thank you for being a part of {comp_year} {comp_name}!
 
-Your registration for the {comp_year} {comp_name} has been accepted.
+    Your registration for the {comp_year} {comp_name} has been accepted.
 
-Your ID-Card has been attached with this email. Print your ID-Card \
-and bring it to the tournament venue in order to compete.
+    Your ID-Card has been attached with this email. Print your ID-Card \
+    and bring it to the tournament venue in order to compete.
 
-If you have any questions please contact us at {contact_email}
+    If you have any questions please contact us at {contact_email}
 
-Warm Regards,
-Golden Dragon TKD
-"""
+    Warm Regards,
+    Golden Dragon TKD
+    """
 
     em = EmailMessage()
     em["From"] = email_sender
@@ -206,6 +208,49 @@ Golden Dragon TKD
         smtp.login(email_sender, email_password)
         smtp.sendmail(email_sender, email_receiver, em.as_string())
         print("Mail Sent!")
+
+
+def generate_badge(db_obj, id):
+    """Generate an ID Badge using DB Data"""
+    # Get Data from DB
+    db_cursor = db_obj.cursor()
+    data = db_cursor.fetchone(f"SELECT * FROM competitors WHERE id == '{id}'")
+
+    # Opening the template image as the main badge
+    badge = Image.open(r"img/id_template.png")
+
+    # Opening and resizing the profile image
+    profile_img = Image.open(f'{data["profile_img"]}')
+    profile_img = profile_img.resize((590, 585))
+
+    # Place profile image on background
+    badge.paste(profile_img, (301, 123))
+
+    # Add text items
+    font = ImageFont.truetype("img/OpenSans-Regular.ttf", size=65)
+    badge_draw = ImageDraw.Draw(badge)
+    # Ring Number
+    badge_draw.text((150, 175), "1", font=font, fill="white")
+    # ID Number
+    badge_draw.text((1000, 175), "3", font=font, fill="white")
+    # Gender
+    badge_draw.text((190, 960), "F", font=font, fill="black")
+    # Age
+    badge_draw.text((190, 1050), "11", font=font, fill="black")
+    # Belt
+    badge_draw.text((925, 960), "Black", font=font, fill="black")
+    # Weight
+    badge_draw.text((925, 1050), "77 kg", font=font, fill="black")
+    # Events
+    events = ["sparring", "poomsae"]
+    y = 1300
+    for event in events:
+        badge_draw.text((150, y), f"• {event}", font=font, fill="black")
+        y += 100
+
+    # Save the image
+    badge = badge.convert("RGB")
+    badge.save("jensen_badge.jpg")
 
 
 if __name__ == "__main__":
