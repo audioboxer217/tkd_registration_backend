@@ -6,6 +6,7 @@ import mysql.connector
 from glob import glob
 from time import sleep
 from email.message import EmailMessage
+from PIL import Image, ImageDraw, ImageFont
 
 
 def connect_db():
@@ -64,6 +65,7 @@ def init_db(db_name, db_user, db_pass):
         age int(2) NOT NULL,
         gender VARCHAR(255) NOT NULL,
         weight decimal(5,2) NOT NULL,
+        profile_img VARCHAR(255) NOT NULL,
         school VARCHAR(255) NOT NULL,
         coach VARCHAR(255) NOT NULL,
         belt VARCHAR(255) NOT NULL,
@@ -137,6 +139,7 @@ def write_entry(db_obj, data):
             "age",
             "gender",
             "weight",
+            "profile_img",
             "coach",
             "belt",
             "events",
@@ -146,6 +149,7 @@ def write_entry(db_obj, data):
             data["age"],
             data["gender"],
             data["weight"],
+            data["imgFilename"],
             data["coach"],
             data["beltRank"],
             data["events"],
@@ -162,10 +166,19 @@ def write_entry(db_obj, data):
     db_obj.commit()
     print(db_cursor.rowcount, "record inserted.")
 
-    return True
+    return db_cursor.lastrowid
 
 
-def send_email(data):
+def send_email(db_obj, id):
+    """Send email using DB Entry Data"""
+    # Get Data from DB
+    db_cursor = db_obj.cursor()
+    db_cursor.execute(f"SELECT * FROM competitors WHERE id = '{id}'")
+    fields = [i[0] for i in db_cursor.description]
+    row = db_cursor.fetchone()
+    data = dict(zip(tuple(fields), row))
+    badge_filename = f"{data['first_name']}_{data['last_name']}_badge.jpg"
+
     comp_year = os.environ.get("COMPETITION_YEAR")
     comp_name = os.environ.get("COMPETITION_NAME")
     email_sender = os.environ.get("FROM_EMAIL")
@@ -175,26 +188,33 @@ def send_email(data):
     subject = f"{comp_year} {comp_name} Registration"
 
     body = f"""
-Dear {data['fname']} {data['lname']},
+    Dear {data['first_name']} {data['last_name']},
 
-Thank you for being a part of {comp_year} {comp_name}!
+    Thank you for being a part of {comp_year} {comp_name}!
 
-Your registration for the {comp_year} {comp_name} has been accepted.
+    Your registration for the {comp_year} {comp_name} has been accepted.
 
-Your ID-Card has been attached with this email. Print your ID-Card \
-and bring it to the tournament venue in order to compete.
+    Your ID-Card has been attached with this email. Print your ID-Card \
+    and bring it to the tournament venue in order to compete.
 
-If you have any questions please contact us at {contact_email}
+    If you have any questions please contact us at {contact_email}
 
-Warm Regards,
-Golden Dragon TKD
-"""
+    Warm Regards,
+    Golden Dragon TKD
+    """
 
     em = EmailMessage()
     em["From"] = email_sender
     em["To"] = email_receiver
     em["Subject"] = subject
     em.set_content(body)
+    with open(f"/data/badges/{badge_filename}", "rb") as badge:
+        em.add_attachment(
+            badge.read(),
+            maintype="image",
+            subtype="jpg",
+            filename=badge_filename,
+        )
 
     # Add SSL (layer of security)
     context = ssl.create_default_context()
@@ -206,11 +226,63 @@ Golden Dragon TKD
         print("Mail Sent!")
 
 
+def generate_badge(db_obj, id):
+    """Generate an ID Badge using DB Data"""
+    # Get Data from DB
+    db_cursor = db_obj.cursor()
+    db_cursor.execute(f"SELECT * FROM competitors WHERE id = '{id}'")
+    fields = [i[0] for i in db_cursor.description]
+    row = db_cursor.fetchone()
+    data = dict(zip(tuple(fields), row))
+
+    # Opening the template image as the main badge
+    badge = Image.open(r"img/id_template.png")
+
+    # Opening and resizing the profile image
+    profile_img = Image.open(f'/data/profile_pics/{data["profile_img"]}')
+    profile_img = profile_img.resize((590, 585))
+
+    # Place profile image on background
+    badge.paste(profile_img, (301, 123))
+
+    # Add text items
+    font = ImageFont.truetype("img/OpenSans-Regular.ttf", size=65)
+    badge_draw = ImageDraw.Draw(badge)
+    # Ring Number
+    badge_draw.text((150, 175), "1", font=font, fill="white")
+    # ID Number
+    badge_draw.text((1000, 175), "3", font=font, fill="white")
+    # Gender
+    badge_draw.text((190, 960), "F", font=font, fill="black")
+    # Age
+    badge_draw.text((190, 1050), "11", font=font, fill="black")
+    # Belt
+    badge_draw.text((925, 960), "Black", font=font, fill="black")
+    # Weight
+    badge_draw.text((925, 1050), "77 kg", font=font, fill="black")
+    # Events
+    events = data["events"]
+    y = 1300
+    for event in events:
+        badge_draw.text((150, y), f"• {event}", font=font, fill="black")
+        y += 100
+
+    # Save the image
+    badge = badge.convert("RGB")
+    badge_filename = f"{data['first_name']}_{data['last_name']}_badge.jpg"
+    badge.save(os.path.join("/data/badges", badge_filename))
+
+
 if __name__ == "__main__":
     # Ensure 'processed' dir exists
     processed_dir = "/data/processed"
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
+
+    # Ensure 'badges' dir exists
+    badges_dir = "/data/badges"
+    if not os.path.exists(badges_dir):
+        os.makedirs(badges_dir)
 
     # Connect to DB
     db_obj = connect_db()
@@ -223,9 +295,10 @@ if __name__ == "__main__":
             # Read JSON
             with open(json_file, "r") as f:
                 data = json.load(f)
-                write_entry(db_obj, data)
-                print(f"{data['fname']} {data['lname']} added")
-                send_email(data)
+                entry = write_entry(db_obj, data)
+                print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
+                generate_badge(db_obj, entry)
+                send_email(db_obj, entry)
             new_path = f"{processed_dir}/{os.path.basename(json_file)}"
             os.rename(json_file, new_path)
     else:
