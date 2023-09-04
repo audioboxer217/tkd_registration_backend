@@ -169,7 +169,16 @@ def write_entry(db_obj, data):
     return db_cursor.lastrowid
 
 
-def send_email(data):
+def send_email(db_obj, id):
+    """Send email using DB Entry Data"""
+    # Get Data from DB
+    db_cursor = db_obj.cursor()
+    db_cursor.execute(f"SELECT * FROM competitors WHERE id = '{id}'")
+    fields = [i[0] for i in db_cursor.description]
+    row = db_cursor.fetchone()
+    data = dict(zip(tuple(fields), row))
+    badge_filename = f"{data['first_name']}_{data['last_name']}_badge.jpg"
+
     comp_year = os.environ.get("COMPETITION_YEAR")
     comp_name = os.environ.get("COMPETITION_NAME")
     email_sender = os.environ.get("FROM_EMAIL")
@@ -179,7 +188,7 @@ def send_email(data):
     subject = f"{comp_year} {comp_name} Registration"
 
     body = f"""
-    Dear {data['fname']} {data['lname']},
+    Dear {data['first_name']} {data['last_name']},
 
     Thank you for being a part of {comp_year} {comp_name}!
 
@@ -199,6 +208,13 @@ def send_email(data):
     em["To"] = email_receiver
     em["Subject"] = subject
     em.set_content(body)
+    with open(f"/data/badges/{badge_filename}", "rb") as badge:
+        em.add_attachment(
+            badge.read(),
+            maintype="image",
+            subtype="jpg",
+            filename=badge_filename,
+        )
 
     # Add SSL (layer of security)
     context = ssl.create_default_context()
@@ -214,13 +230,16 @@ def generate_badge(db_obj, id):
     """Generate an ID Badge using DB Data"""
     # Get Data from DB
     db_cursor = db_obj.cursor()
-    data = db_cursor.fetchone(f"SELECT * FROM competitors WHERE id == '{id}'")
+    db_cursor.execute(f"SELECT * FROM competitors WHERE id = '{id}'")
+    fields = [i[0] for i in db_cursor.description]
+    row = db_cursor.fetchone()
+    data = dict(zip(tuple(fields), row))
 
     # Opening the template image as the main badge
     badge = Image.open(r"img/id_template.png")
 
     # Opening and resizing the profile image
-    profile_img = Image.open(f'{data["profile_img"]}')
+    profile_img = Image.open(f'/data/profile_pics/{data["profile_img"]}')
     profile_img = profile_img.resize((590, 585))
 
     # Place profile image on background
@@ -242,7 +261,7 @@ def generate_badge(db_obj, id):
     # Weight
     badge_draw.text((925, 1050), "77 kg", font=font, fill="black")
     # Events
-    events = ["sparring", "poomsae"]
+    events = data["events"]
     y = 1300
     for event in events:
         badge_draw.text((150, y), f"• {event}", font=font, fill="black")
@@ -250,7 +269,8 @@ def generate_badge(db_obj, id):
 
     # Save the image
     badge = badge.convert("RGB")
-    badge.save("jensen_badge.jpg")
+    badge_filename = f"{data['first_name']}_{data['last_name']}_badge.jpg"
+    badge.save(os.path.join("/data/badges", badge_filename))
 
 
 if __name__ == "__main__":
@@ -258,6 +278,11 @@ if __name__ == "__main__":
     processed_dir = "/data/processed"
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
+
+    # Ensure 'badges' dir exists
+    badges_dir = "/data/badges"
+    if not os.path.exists(badges_dir):
+        os.makedirs(badges_dir)
 
     # Connect to DB
     db_obj = connect_db()
@@ -272,7 +297,8 @@ if __name__ == "__main__":
                 data = json.load(f)
                 entry = write_entry(db_obj, data)
                 print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
-                send_email(data)
+                generate_badge(db_obj, entry)
+                send_email(db_obj, entry)
             new_path = f"{processed_dir}/{os.path.basename(json_file)}"
             os.rename(json_file, new_path)
     else:
