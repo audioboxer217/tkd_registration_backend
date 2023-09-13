@@ -323,8 +323,7 @@ if __name__ == "__main__":
             elif checkout.status == "complete":
                 entry = write_entry(db_obj, data)
                 print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
-                generate_badge(db_obj, entry)
-                send_email(db_obj, entry)
+                send_email(db_obj, data["reg_type"], entry)
             new_path = f"{processed_dir}/{os.path.basename(json_file)}"
             os.rename(json_file, new_path)
     else:
