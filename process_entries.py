@@ -323,13 +323,10 @@ if __name__ == "__main__":
             elif checkout.status == "complete":
                 entry = write_entry(db_obj, data)
                 print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
-                send_email(db_obj, data["reg_type"], entry)
-                new_path = f"{processed_dir}/{os.path.basename(json_file)}"
-                os.rename(json_file, new_path)
-            else:
-                print(f"Error processing {data['fname']} {data['lname']}")
-                new_path = f"{failed_dir}/{os.path.basename(json_file)}"
-                os.rename(json_file, new_path)
+                generate_badge(db_obj, entry)
+                send_email(db_obj, entry)
+            new_path = f"{processed_dir}/{os.path.basename(json_file)}"
+            os.rename(json_file, new_path)
     else:
         print("Currently no entries to process. Waiting...")
 
