@@ -172,15 +172,18 @@ def write_entry(db_obj, data):
     return db_cursor.lastrowid
 
 
-def send_email(db_obj, id):
+def send_email(db_obj, reg_type, id):
     """Send email using DB Entry Data"""
     # Get Data from DB
+    db_dict = {
+        "coach": "coaches",
+        "competitor": "competitors",
+    }
     db_cursor = db_obj.cursor()
-    db_cursor.execute(f"SELECT * FROM competitors WHERE id = '{id}'")
+    db_cursor.execute(f"SELECT * FROM {db_dict[reg_type]} WHERE id = '{id}'")
     fields = [i[0] for i in db_cursor.description]
     row = db_cursor.fetchone()
     data = dict(zip(tuple(fields), row))
-    badge_filename = f"{data['first_name']}_{data['last_name']}_badge.jpg"
 
     comp_year = os.environ.get("COMPETITION_YEAR")
     comp_name = os.environ.get("COMPETITION_NAME")
@@ -190,16 +193,20 @@ def send_email(db_obj, id):
     email_receiver = data["email"]
     subject = f"{comp_year} {comp_name} Registration"
 
-    body = f"""
+    body_start = f"""
     Dear {data['first_name']} {data['last_name']},
 
     Thank you for being a part of {comp_year} {comp_name}!
 
     Your registration for the {comp_year} {comp_name} has been accepted.
+    """
 
+    body_competitor = f""" 
     Your ID-Card has been attached with this email. Print your ID-Card \
     and bring it to the tournament venue in order to compete.
+    """
 
+    body_end = f"""
     If you have any questions please contact us at {contact_email}
 
     Warm Regards,
@@ -210,14 +217,18 @@ def send_email(db_obj, id):
     em["From"] = email_sender
     em["To"] = email_receiver
     em["Subject"] = subject
-    em.set_content(body)
-    with open(f"/data/badges/{badge_filename}", "rb") as badge:
-        em.add_attachment(
-            badge.read(),
-            maintype="image",
-            subtype="jpg",
-            filename=badge_filename,
-        )
+    if reg_type == "competitor":
+        em.set_content(body_start + body_competitor + body_end)
+        badge_filename = generate_badge(db_obj, entry)
+        with open(f"/data/badges/{badge_filename}", "rb") as badge:
+            em.add_attachment(
+                badge.read(),
+                maintype="image",
+                subtype="jpg",
+                filename=badge_filename,
+            )
+    else:
+        em.set_content(body_start + body_end)
 
     # Add SSL (layer of security)
     context = ssl.create_default_context()
@@ -275,6 +286,8 @@ def generate_badge(db_obj, id):
     badge_filename = f"{data['first_name']}_{data['last_name']}_badge.jpg"
     badge.save(os.path.join("/data/badges", badge_filename))
 
+    return badge_filename
+
 
 if __name__ == "__main__":
     # Ensure 'processed' dir exists
@@ -310,8 +323,7 @@ if __name__ == "__main__":
             elif checkout.status == "complete":
                 entry = write_entry(db_obj, data)
                 print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
-                generate_badge(db_obj, entry)
-                send_email(db_obj, entry)
+                send_email(db_obj, data["reg_type"], entry)
                 new_path = f"{processed_dir}/{os.path.basename(json_file)}"
                 os.rename(json_file, new_path)
             else:
