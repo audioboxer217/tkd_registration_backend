@@ -72,8 +72,8 @@ def init_db(db_name, db_user, db_pass):
         events SET(
             'Sparring',
             'Poomsae',
+            'Pair Poomsae',
             'Team Poomsae',
-            'Demonstration'
             ) NOT NULL,
         PRIMARY KEY (id),
         CONSTRAINT full_name UNIQUE (first_name,last_name)
