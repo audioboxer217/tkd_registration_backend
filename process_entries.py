@@ -1,12 +1,15 @@
 import os
 import ssl
 import json
+import stripe
 import smtplib
 import mysql.connector
 from glob import glob
 from time import sleep
 from email.message import EmailMessage
 from PIL import Image, ImageDraw, ImageFont
+
+stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 
 def connect_db():
@@ -73,7 +76,7 @@ def init_db(db_name, db_user, db_pass):
             'Sparring',
             'Poomsae',
             'Pair Poomsae',
-            'Team Poomsae',
+            'Team Poomsae'
             ) NOT NULL,
         PRIMARY KEY (id),
         CONSTRAINT full_name UNIQUE (first_name,last_name)
@@ -292,6 +295,11 @@ if __name__ == "__main__":
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
 
+    # Ensure 'failed' dir exists
+    failed_dir = "/data/failed"
+    if not os.path.exists(failed_dir):
+        os.makedirs(failed_dir)
+
     # Ensure 'badges' dir exists
     badges_dir = "/data/badges"
     if not os.path.exists(badges_dir):
@@ -308,6 +316,11 @@ if __name__ == "__main__":
             # Read JSON
             with open(json_file, "r") as f:
                 data = json.load(f)
+
+            checkout = stripe.checkout.Session.retrieve(data["checkout"])
+            if checkout.status == "open":
+                print("Waiting for Stripe Checkout")
+            elif checkout.status == "complete":
                 entry = write_entry(db_obj, data)
                 print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
                 send_email(db_obj, data["reg_type"], entry)
