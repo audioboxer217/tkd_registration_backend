@@ -76,7 +76,7 @@ def init_db(db_name, db_user, db_pass):
             'Sparring',
             'Poomsae',
             'Pair Poomsae',
-            'Team Poomsae',
+            'Team Poomsae'
             ) NOT NULL,
         PRIMARY KEY (id),
         CONSTRAINT full_name UNIQUE (first_name,last_name)
