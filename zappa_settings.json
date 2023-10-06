@@ -1,0 +1,38 @@
+{
+    "process": {
+        "app_function": "process_entries.main",
+        "apigateway_enabled": false,
+        "aws_region": "us-east-2",
+        "profile_name": "personal",
+        "project_name": "backend",
+        "runtime": "python3.8",
+        "s3_bucket": "zappa-zkeiw8pfn",
+        "layers": [
+            "arn:aws:lambda:us-east-2:770693421928:layer:Klayers-p38-Pillow:9"
+        ],
+        "events": [
+            {
+                "function": "process_entries.main",
+                "event_source": {
+                    "arn": "arn:aws:sqs:us-east-2:799879571353:processing",
+                    "batch_size": 1,
+                    "enabled": true
+                }
+            }
+        ],
+        "dead_letter_arn": "arn:aws:sqs:us-east-2:799879571353:failed_registrations",
+        "remote_env": "s3://gdtkd-reg-config/backend.json",
+        "environment_variables": {
+            "COMPETITION_NAME": "Oklahoma Grand Prix",
+            "COMPETITION_YEAR": "2024",
+            "CONTACT_EMAIL": "contacttulsa@goldendragontkd.com",
+            "PROFILE_PIC_BUCKET": "gdtkd-reg-profile-pics",
+            "BADGE_BUCKET": "gdtkd-reg-badges",
+            "CONFIG_BUCKET": "gdtkd-reg-config",
+            "SQS_QUEUE_URL": "https://sqs.us-east-2.amazonaws.com/799879571353/processing"
+        },
+        "parameter_depth": 1,
+        "memory_size": 512,
+        "use_precompiled_packages": true
+    }
+}
