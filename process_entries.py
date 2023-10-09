@@ -104,13 +104,13 @@ def generate_badge(data):
     # ID Number
     badge_draw.text((1000, 175), "3", font=font, fill="white")
     # Gender
-    badge_draw.text((190, 960), "F", font=font, fill="black")
+    badge_draw.text((190, 960), data['gender']['S'], font=font, fill="black")
     # Age
-    badge_draw.text((190, 1050), "11", font=font, fill="black")
+    badge_draw.text((190, 1050), data['age']['N'], font=font, fill="black")
     # Belt
-    badge_draw.text((925, 960), "Black", font=font, fill="black")
+    badge_draw.text((925, 960),data['beltRank']['S'], font=font, fill="black")
     # Weight
-    badge_draw.text((925, 1050), "77 kg", font=font, fill="black")
+    badge_draw.text((925, 1050), f"{data['weight']['N']} kg", font=font, fill="black")
     # Events
     events = data["events"]["S"].split(',')
     y = 1300
