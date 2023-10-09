@@ -15,192 +15,26 @@ stripe.api_key = os.getenv("STRIPE_API_KEY")
 badge_bucket = os.getenv("BADGE_BUCKET")
 profile_pic_bucket = os.getenv("PROFILE_PIC_BUCKET")
 queue_url = os.getenv("SQS_QUEUE_URL")
+table_name = os.getenv("DB_TABLE")
 s3 = boto3.client('s3')
 sqs = boto3.client('sqs')
+dynamodb = boto3.client('dynamodb')
 
-def connect_db():
-    db_user = os.getenv("MYSQL_ROOT_USER")
-    db_pass = os.getenv("MYSQL_ROOT_PASSWORD")
-    db_name = os.getenv("MYSQL_DB_NAME")
-
-    # Connect to DB
-    try:
-        mydb = mysql.connector.connect(
-            host="db",
-            user=db_user,
-            password=db_pass,
-            database=db_name,
-        )
-        return mydb
-    except mysql.connector.Error:
-        mydb = init_db(db_name, db_user, db_pass)
-        return mydb
-
-
-def init_db(db_name, db_user, db_pass):
-    # Connect to MySQL
-    mysql_db = mysql.connector.connect(
-        host="db",
-        user=db_user,
-        password=db_pass,
-    )
-    dbcursor = mysql_db.cursor()
-
-    # Create DB
-    dbcursor.execute(f"CREATE DATABASE {db_name}")
-
-    # Connect to DB
-    mydb = mysql.connector.connect(
-        host="db",
-        user=db_user,
-        password=db_pass,
-        database=db_name,
-    )
-    mycursor = mydb.cursor()
-    # Create Tables
-    competitors_table = """
-    CREATE TABLE competitors (
-        id int(3) UNIQUE NOT NULL AUTO_INCREMENT,
-        first_name VARCHAR(255) NOT NULL,
-        last_name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        phone VARCHAR(255) NOT NULL,
-        address1 VARCHAR(255) NOT NULL,
-        address2 VARCHAR(255),
-        city VARCHAR(255) NOT NULL,
-        state CHAR(2) NOT NULL,
-        zip int(5) NOT NULL,
-        birthdate CHAR(10) NOT NULL,
-        age int(2) NOT NULL,
-        gender VARCHAR(255) NOT NULL,
-        weight decimal(5,2) NOT NULL,
-        profile_img VARCHAR(255) NOT NULL,
-        school VARCHAR(255) NOT NULL,
-        coach VARCHAR(255) NOT NULL,
-        belt VARCHAR(255) NOT NULL,
-        events SET(
-            'Sparring',
-            'Poomsae',
-            'Pair Poomsae',
-            'Team Poomsae'
-            ) NOT NULL,
-        PRIMARY KEY (id),
-        CONSTRAINT full_name UNIQUE (first_name,last_name)
-    )
-    """
-
-    coaches_table = """
-    CREATE TABLE coaches (
-        id int(3) UNIQUE NOT NULL AUTO_INCREMENT,
-        first_name VARCHAR(255) NOT NULL,
-        last_name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        phone VARCHAR(255) NOT NULL,
-        address1 VARCHAR(255) NOT NULL,
-        address2 VARCHAR(255),
-        city VARCHAR(255) NOT NULL,
-        state CHAR(2) NOT NULL,
-        zip int(5) NOT NULL,
-        school VARCHAR(255) NOT NULL,
-        PRIMARY KEY (id),
-        CONSTRAINT full_name UNIQUE (first_name,last_name)
-    )
-    """
-    mycursor.execute(competitors_table)
-    mycursor.execute("ALTER TABLE competitors AUTO_INCREMENT=100")
-    mycursor.execute(coaches_table)
-    mycursor.execute("ALTER TABLE coaches AUTO_INCREMENT=900")
-
-    return mydb
-
-
-def write_entry(db_obj, data):
-    db_cursor = db_obj.cursor()
-    # Generate SQL
-    fields = (
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "address1",
-        "address2",
-        "city",
-        "state",
-        "zip",
-        "school",
-    )
-    vals = (
-        data["fname"],
-        data["lname"],
-        data["email"],
-        data["phone"],
-        data["address1"],
-        data["address2"],
-        data["city"],
-        data["state"],
-        data["zip"],
-        data["school"],
-    )
-    if data["reg_type"] == "competitor":
-        db_name = "competitors"
-        fields += (
-            "birthdate",
-            "age",
-            "gender",
-            "weight",
-            "profile_img",
-            "coach",
-            "belt",
-            "events",
-        )
-        vals += (
-            data["birthdate"],
-            data["age"],
-            data["gender"],
-            data["weight"],
-            data["imgFilename"],
-            data["coach"],
-            data["beltRank"],
-            data["events"],
-        )
-    else:
-        db_name = "coaches"
-
-    # Write entry to DB
-    sql = f"""
-    INSERT INTO {db_name} ({','.join(fields)})
-    VALUES ('{"','".join(vals)}')
-    """
-    db_cursor.execute(sql)
-    db_obj.commit()
-    print(db_cursor.rowcount, "record inserted.")
-
-    return db_cursor.lastrowid
 
 
 def send_email(data):
     """Send email using DB Entry Data"""
-    # Get Data from DB
-    db_dict = {
-        "coach": "coaches",
-        "competitor": "competitors",
-    }
-    # db_cursor = db_obj.cursor()
-    # db_cursor.execute(f"SELECT * FROM {db_dict[reg_type]} WHERE id = '{id}'")
-    # fields = [i[0] for i in db_cursor.description]
-    # row = db_cursor.fetchone()
-    # data = dict(zip(tuple(fields), row))
 
     comp_year = os.environ.get("COMPETITION_YEAR")
     comp_name = os.environ.get("COMPETITION_NAME")
     email_sender = os.environ.get("FROM_EMAIL")
     email_password = os.environ.get("EMAIL_PASSWD")
     contact_email = os.environ.get("CONTACT_EMAIL")
-    email_receiver = data["email"]
+    email_receiver = data["email"]["S"]
     subject = f"{comp_year} {comp_name} Registration"
 
     body_start = f"""
-    Dear {data['fname']} {data['lname']},
+    Dear {data['full_name']['S']},
 
     Thank you for being a part of {comp_year} {comp_name}!
 
@@ -223,7 +57,7 @@ def send_email(data):
     em["From"] = email_sender
     em["To"] = email_receiver
     em["Subject"] = subject
-    if data["reg_type"] == "competitor":
+    if data["reg_type"]["S"] == "competitor":
         em.set_content(body_start + body_competitor + body_end)
         badge_filename = generate_badge(data)
         with open(os.path.join("/tmp",badge_filename), "rb") as badge:
@@ -248,20 +82,13 @@ def send_email(data):
 
 def generate_badge(data):
     """Generate an ID Badge using DB Data"""
-    # Get Data from DB
-    # db_cursor = db_obj.cursor()
-    # db_cursor.execute(f"SELECT * FROM competitors WHERE id = '{id}'")
-    # fields = [i[0] for i in db_cursor.description]
-    # row = db_cursor.fetchone()
-    # data = dict(zip(tuple(fields), row))
 
     # Opening the template image as the main badge
     badge = Image.open(r"img/id_template.png")
     # Opening and resizing the profile image
-    # profile_img = Image.open(f'/data/profile_pics/{data["profile_img"]}'
     profile_img_string = s3.get_object(
         Bucket=profile_pic_bucket,
-        Key=data["imgFilename"],
+        Key=data["imgFilename"]["S"],
     )['Body'].read()
     profile_img = Image.open(io.BytesIO(profile_img_string))
     profile_img = profile_img.resize((590, 585))
@@ -285,7 +112,7 @@ def generate_badge(data):
     # Weight
     badge_draw.text((925, 1050), "77 kg", font=font, fill="black")
     # Events
-    events = data["events"].split(',')
+    events = data["events"]["S"].split(',')
     y = 1300
     for event in events:
         badge_draw.text((150, y), f"• {event}", font=font, fill="black")
@@ -294,7 +121,7 @@ def generate_badge(data):
     try:
         # Save the image for email attachment
         badge = badge.convert("RGB")
-        badge_filename = f"{data['fname']}_{data['lname']}_badge.jpg"
+        badge_filename = f"{data['full_name']['S']}_badge.jpg".replace(' ', '_')
         badge.save(os.path.join("/tmp",badge_filename))
 
         # Save the image to an in-memory file for S3 Upload
@@ -318,25 +145,22 @@ def main(response):
         entries = response['Records']
         print(f"Processing {len(entries)} entries")
 
-        # Connect to DB
-        # db_obj = connect_db()
-
         for record in entries:
             try:
                 data = json.loads(record['body'])
             except Exception as e:
                 batch_item_failures.append({"itemIdentifier": record['messageId']})
-            print(f"  Processing {data['fname']} {data['lname']}")
-            checkout = stripe.checkout.Session.retrieve(data["checkout"])
+            print(f"  Processing {data['full_name']['S']}")
+            checkout = stripe.checkout.Session.retrieve(data["checkout"]["S"])
             if checkout.status == "open":
                 print("Waiting for Stripe Checkout")
                 raise ValueError("Checkout Not Complete")
             elif checkout.status == "complete":
-                # entry = write_entry(db_obj, data)
-                # print(f"Entry #{entry} - {data['fname']} {data['lname']} added")
+                dynamodb.put_item(TableName=table_name, Item=data)
+                print(f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}")
                 send_email(data)
 
-            print(f"  {data['fname']} {data['lname']} Processed Successfully")
+            print(f"  {data['full_name']['S']} Processed Successfully")
         
         sqs_batch_response["batchItemFailures"] = batch_item_failures
         return sqs_batch_response

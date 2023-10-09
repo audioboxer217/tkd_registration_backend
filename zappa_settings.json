@@ -29,7 +29,8 @@
             "PROFILE_PIC_BUCKET": "gdtkd-reg-profile-pics",
             "BADGE_BUCKET": "gdtkd-reg-badges",
             "CONFIG_BUCKET": "gdtkd-reg-config",
-            "SQS_QUEUE_URL": "https://sqs.us-east-2.amazonaws.com/799879571353/processing"
+            "SQS_QUEUE_URL": "https://sqs.us-east-2.amazonaws.com/799879571353/processing",
+            "DB_TABLE": "okgp_2024_registration"
         },
         "parameter_depth": 1,
         "memory_size": 512,
