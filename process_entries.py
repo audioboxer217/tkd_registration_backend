@@ -16,10 +16,9 @@ badge_bucket = os.getenv("BADGE_BUCKET")
 profile_pic_bucket = os.getenv("PROFILE_PIC_BUCKET")
 queue_url = os.getenv("SQS_QUEUE_URL")
 table_name = os.getenv("DB_TABLE")
-s3 = boto3.client('s3')
-sqs = boto3.client('sqs')
-dynamodb = boto3.client('dynamodb')
-
+s3 = boto3.client("s3")
+sqs = boto3.client("sqs")
+dynamodb = boto3.client("dynamodb")
 
 
 def send_email(data):
@@ -60,7 +59,7 @@ def send_email(data):
     if data["reg_type"]["S"] == "competitor":
         em.set_content(body_start + body_competitor + body_end)
         badge_filename = generate_badge(data)
-        with open(os.path.join("/tmp",badge_filename), "rb") as badge:
+        with open(os.path.join("/tmp", badge_filename), "rb") as badge:
             em.add_attachment(
                 badge.read(),
                 maintype="image",
@@ -89,7 +88,7 @@ def generate_badge(data):
     profile_img_string = s3.get_object(
         Bucket=profile_pic_bucket,
         Key=data["imgFilename"]["S"],
-    )['Body'].read()
+    )["Body"].read()
     profile_img = Image.open(io.BytesIO(profile_img_string))
     profile_img = profile_img.resize((590, 585))
 
@@ -104,15 +103,15 @@ def generate_badge(data):
     # ID Number
     badge_draw.text((1000, 175), "3", font=font, fill="white")
     # Gender
-    badge_draw.text((190, 960), data['gender']['S'], font=font, fill="black")
+    badge_draw.text((190, 960), data["gender"]["S"], font=font, fill="black")
     # Age
-    badge_draw.text((190, 1050), data['age']['N'], font=font, fill="black")
+    badge_draw.text((190, 1050), data["age"]["N"], font=font, fill="black")
     # Belt
-    badge_draw.text((925, 960),data['beltRank']['S'], font=font, fill="black")
+    badge_draw.text((925, 960), data["beltRank"]["S"], font=font, fill="black")
     # Weight
     badge_draw.text((925, 1050), f"{data['weight']['N']} kg", font=font, fill="black")
     # Events
-    events = data["events"]["S"].split(',')
+    events = data["events"]["S"].split(",")
     y = 1300
     for event in events:
         badge_draw.text((150, y), f"• {event}", font=font, fill="black")
@@ -121,8 +120,8 @@ def generate_badge(data):
     try:
         # Save the image for email attachment
         badge = badge.convert("RGB")
-        badge_filename = f"{data['full_name']['S']}_badge.jpg".replace(' ', '_')
-        badge.save(os.path.join("/tmp",badge_filename))
+        badge_filename = f"{data['full_name']['S']}_badge.jpg".replace(" ", "_")
+        badge.save(os.path.join("/tmp", badge_filename))
 
         # Save the image to an in-memory file for S3 Upload
         badge_file = io.BytesIO()
@@ -142,14 +141,14 @@ def main(response):
     if response:
         batch_item_failures = []
         sqs_batch_response = {}
-        entries = response['Records']
+        entries = response["Records"]
         print(f"Processing {len(entries)} entries")
 
         for record in entries:
             try:
-                data = json.loads(record['body'])
-            except Exception as e:
-                batch_item_failures.append({"itemIdentifier": record['messageId']})
+                data = json.loads(record["body"])
+            except Exception:
+                batch_item_failures.append({"itemIdentifier": record["messageId"]})
             print(f"  Processing {data['full_name']['S']}")
             checkout = stripe.checkout.Session.retrieve(data["checkout"]["S"])
             if checkout.status == "open":
@@ -157,7 +156,9 @@ def main(response):
                 raise ValueError("Checkout Not Complete")
             elif checkout.status == "complete":
                 dynamodb.put_item(TableName=table_name, Item=data)
-                print(f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}")
+                print(
+                    f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}"
+                )
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
 
@@ -166,6 +167,7 @@ def main(response):
 
     else:
         print("Currently no entries to process. Waiting...")
+
 
 if __name__ == "__main__":
     main(response)
