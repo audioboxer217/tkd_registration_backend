@@ -159,9 +159,8 @@ def main(response):
                 dynamodb.put_item(TableName=table_name, Item=data)
                 print(f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}")
                 send_email(data)
+                print(f"  {data['full_name']['S']} Processed Successfully")
 
-            print(f"  {data['full_name']['S']} Processed Successfully")
-        
         sqs_batch_response["batchItemFailures"] = batch_item_failures
         return sqs_batch_response
 
