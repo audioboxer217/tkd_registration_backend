@@ -5,7 +5,6 @@ import json
 import boto3
 import stripe
 import smtplib
-import mysql.connector
 from glob import glob
 from time import sleep
 from email.message import EmailMessage
@@ -120,7 +119,7 @@ def generate_badge(data):
     try:
         # Save the image for email attachment
         badge = badge.convert("RGB")
-        badge_filename = f"{data['full_name']['S']}_badge.jpg".replace(" ", "_")
+        badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
         badge.save(os.path.join("/tmp", badge_filename))
 
         # Save the image to an in-memory file for S3 Upload
@@ -155,7 +154,18 @@ def main(response):
                 print("Waiting for Stripe Checkout")
                 raise ValueError("Checkout Not Complete")
             elif checkout.status == "complete":
-                dynamodb.put_item(TableName=table_name, Item=data)
+                school = data["school"]["S"].replace(" ", "-")
+                full_name = data["full_name"]["S"].replace(" ", "-")
+                data.update(
+                    dict(
+                        pk={"S": f"{school}_{data['reg_type']['S']}_{full_name}"},
+                    )
+                )
+                dynamodb.put_item(
+                    TableName=table_name,
+                    Item=data,
+                    ConditionExpression="attribute_not_exists(pk)",
+                )
                 print(
                     f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}"
                 )
