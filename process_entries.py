@@ -119,7 +119,7 @@ def generate_badge(data):
     try:
         # Save the image for email attachment
         badge = badge.convert("RGB")
-        badge_filename = f"{data['full_name']['S']}_badge.jpg".replace(" ", "_")
+        badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
         badge.save(os.path.join("/tmp", badge_filename))
 
         # Save the image to an in-memory file for S3 Upload
@@ -156,7 +156,11 @@ def main(response):
             elif checkout.status == "complete":
                 school = data["school"]["S"].replace(" ", "-")
                 full_name = data["full_name"]["S"].replace(" ", "-")
-                data["pk"]["S"] = f"{school}_{data['reg_type']['S']}_{full_name}"
+                data.update(
+                    dict(
+                        pk={"S": f"{school}_{data['reg_type']['S']}_{full_name}"},
+                    )
+                )
                 dynamodb.put_item(
                     TableName=table_name,
                     Item=data,
