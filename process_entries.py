@@ -5,7 +5,6 @@ import json
 import boto3
 import stripe
 import smtplib
-import mysql.connector
 from glob import glob
 from time import sleep
 from email.message import EmailMessage
