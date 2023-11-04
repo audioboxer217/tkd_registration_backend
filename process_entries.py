@@ -5,7 +5,6 @@ import json
 import boto3
 import stripe
 import smtplib
-import mysql.connector
 from glob import glob
 from time import sleep
 from email.message import EmailMessage
@@ -155,7 +154,14 @@ def main(response):
                 print("Waiting for Stripe Checkout")
                 raise ValueError("Checkout Not Complete")
             elif checkout.status == "complete":
-                dynamodb.put_item(TableName=table_name, Item=data)
+                school = data["school"]["S"].replace(" ", "-")
+                full_name = data["full_name"]["S"].replace(" ", "-")
+                data["pk"]["S"] = f"{school}_{data['reg_type']['S']}_{full_name}"
+                dynamodb.put_item(
+                    TableName=table_name,
+                    Item=data,
+                    ConditionExpression="attribute_not_exists(pk)",
+                )
                 print(
                     f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}"
                 )
