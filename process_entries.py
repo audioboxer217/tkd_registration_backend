@@ -154,11 +154,11 @@ def main(response):
                 print("Waiting for Stripe Checkout")
                 raise ValueError("Checkout Not Complete")
             elif checkout.status == "complete":
-                school = data["school"]["S"].replace(" ", "-")
-                full_name = data["full_name"]["S"].replace(" ", "-")
+                school = data["school"]["S"].replace(" ", "_")
+                full_name = data["full_name"]["S"].replace(" ", "_")
                 data.update(
                     dict(
-                        pk={"S": f"{school}_{data['reg_type']['S']}_{full_name}"},
+                        pk={"S": f"{school}-{data['reg_type']['S']}-{full_name}"},
                     )
                 )
                 dynamodb.put_item(
