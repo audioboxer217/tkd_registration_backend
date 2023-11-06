@@ -21,7 +21,7 @@
             }
         ],
         "dead_letter_arn": "arn:aws:sqs:us-east-2:799879571353:failed_registrations",
-        "remote_env": "s3://gdtkd-reg-config/backend.json",
+        "remote_env": "s3://okgp24-reg-config/backend.json",
         "parameter_depth": 1,
         "memory_size": 512,
         "use_precompiled_packages": true
