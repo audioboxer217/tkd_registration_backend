@@ -25,6 +25,8 @@ def send_email(data):
 
     comp_year = os.environ.get("COMPETITION_YEAR")
     comp_name = os.environ.get("COMPETITION_NAME")
+    email_server = os.environ.get("EMAIL_SERVER")
+    email_port = os.environ.get("EMAIL_PORT")
     email_sender = os.environ.get("FROM_EMAIL")
     email_password = os.environ.get("EMAIL_PASSWD")
     contact_email = os.environ.get("CONTACT_EMAIL")
@@ -72,7 +74,7 @@ def send_email(data):
     context = ssl.create_default_context()
 
     # Log in and send the email
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+    with smtplib.SMTP_SSL(email_server, email_port, context=context) as smtp:
         smtp.login(email_sender, email_password)
         smtp.sendmail(email_sender, email_receiver, em.as_string())
         print("Mail Sent!")
