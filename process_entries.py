@@ -5,19 +5,8 @@ import json
 import boto3
 import stripe
 import smtplib
-from glob import glob
-from time import sleep
 from email.message import EmailMessage
 from PIL import Image, ImageDraw, ImageFont
-
-stripe.api_key = os.getenv("STRIPE_API_KEY")
-badge_bucket = os.getenv("BADGE_BUCKET")
-profile_pic_bucket = os.getenv("PROFILE_PIC_BUCKET")
-queue_url = os.getenv("SQS_QUEUE_URL")
-table_name = os.getenv("DB_TABLE")
-s3 = boto3.client("s3")
-sqs = boto3.client("sqs")
-dynamodb = boto3.client("dynamodb")
 
 
 def send_email(data):
@@ -165,6 +154,13 @@ def generate_badge(data):
 
 
 def main(response):
+    sqs = boto3.client("sqs")
+    dynamodb = boto3.client("dynamodb")
+
+    stripe.api_key = os.getenv("STRIPE_API_KEY")
+    queue_url = os.getenv("SQS_QUEUE_URL")
+    table_name = os.getenv("DB_TABLE")
+
     if response:
         batch_item_failures = []
         sqs_batch_response = {}
