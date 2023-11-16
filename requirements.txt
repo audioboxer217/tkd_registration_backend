@@ -1,4 +1,3 @@
-stripe==6.0.0
-Werkzeug==3.0.1
-zappa>=0.17.6
-boto3==1.28.58
+boto3>=1.28.58
+stripe>=7.0.0
+zappa>=0.58.0
