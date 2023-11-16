@@ -6,6 +6,7 @@ import boto3
 import stripe
 import smtplib
 from email.message import EmailMessage
+from email.utils import formataddr
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -22,20 +23,34 @@ def send_email(data):
     email_receiver = data["email"]["S"]
     subject = f"{comp_year} {comp_name} Registration"
 
-    body_start = f"""
+    reg_details = f"""
+        Name: {data["full_name"]["S"]}
+        Type: {data["reg_type"]["S"]}
+        Email: {data["email"]["S"]}
+        Phone: {data["phone"]["S"]}
+        Address1: {data["address1"]["S"]}
+        Address2: {data["address2"]["S"]}
+        City: {data["city"]["S"]}
+        State: {data["state"]["S"]}
+        Zip: {data["zip"]["S"]}
+        School: {data["school"]["S"]}
+    """
+    if data["reg_type"]["S"] == 'competitor':
+        reg_details += f"""    Coach: {data["coach"]["S"]}
+        Birthdate: {data["birthdate"]["S"]}
+        Gender: {data["gender"]["S"]}
+        Weight: {data["weight"]["N"]}
+        Belt: {data["beltRank"]["S"]}
+        Events: {data["events"]["S"].replace(',',', ')}
+        """
+    
+    body = f"""
     Dear {data['full_name']['S']},
 
-    Thank you for being a part of {comp_year} {comp_name}!
+    Thank you for being a part of the {comp_year} {comp_name}!
 
-    Your registration for the {comp_year} {comp_name} has been accepted.
-    """
-
-    body_competitor = f""" 
-    Your ID-Card has been attached with this email. Print your ID-Card \
-    and bring it to the tournament venue in order to compete.
-    """
-
-    body_end = f"""
+    Your registration has been accepted with the following details.
+    {reg_details}
     If you have any questions please contact us at {contact_email}
 
     Warm Regards,
@@ -43,21 +58,10 @@ def send_email(data):
     """
 
     em = EmailMessage()
-    em["From"] = email_sender
-    em["To"] = email_receiver
+    em["From"] = formataddr(('Golden Dragon TKD', email_sender))
+    em["To"] = formataddr((data["full_name"]["S"], email_receiver))
     em["Subject"] = subject
-    if data["reg_type"]["S"] == "competitor":
-        em.set_content(body_start + body_competitor + body_end)
-        badge_filename = generate_badge(data)
-        with open(os.path.join("/tmp", badge_filename), "rb") as badge:
-            em.add_attachment(
-                badge.read(),
-                maintype="image",
-                subtype="jpg",
-                filename=badge_filename,
-            )
-    else:
-        em.set_content(body_start + body_end)
+    em.set_content(body)
 
     # Add SSL (layer of security)
     context = ssl.create_default_context()
@@ -133,11 +137,13 @@ def generate_badge(data):
         badge_draw.text((x, y), f"• {event}", font=font, fill="black")
 
     try:
-        # Save the image for email attachment
+        # Resize and convert to final size/type
         badge = badge.resize((250,400), resample=Image.LANCZOS)
         badge = badge.convert("RGB")
         badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
-        badge.save(f"/tmp/{badge_filename}")
+
+        # Save the image for email attachment
+        # badge.save(f"/tmp/{badge_filename}")
 
         # Save the image to an in-memory file for S3 Upload
         badge_file = io.BytesIO()
@@ -150,7 +156,7 @@ def generate_badge(data):
     except Exception as e:
         print(f"{e = }")
 
-    return badge_filename
+    print(f"Badge '{badge_filename}' generated")
 
 
 def main(response):
@@ -179,6 +185,8 @@ def main(response):
                 raise ValueError("Checkout Not Complete")
             elif checkout.status == "complete":
                 school = data["school"]["S"].replace(" ", "_")
+                del data["checkout"]
+                data["payment"] = {"S": checkout.payment_intent}
                 full_name = data["full_name"]["S"].replace(" ", "_")
                 data.update(
                     dict(
@@ -193,6 +201,8 @@ def main(response):
                 print(
                     f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}"
                 )
+                if data['reg_type']['S'] == 'competitor':
+                    generate_badge(data)
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
 
