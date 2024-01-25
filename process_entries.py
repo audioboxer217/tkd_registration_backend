@@ -191,7 +191,8 @@ def main(response):
             elif checkout.status == "complete":
                 school = data["school"]["S"].replace(" ", "_")
                 del data["checkout"]
-                data["payment"] = {"S": checkout.payment_intent}
+                if data["reg_type"]["S"] == "competitor":
+                    data["payment"] = {"S": checkout.payment_intent}
                 full_name = data["full_name"]["S"].replace(" ", "_")
                 data.update(
                     dict(
