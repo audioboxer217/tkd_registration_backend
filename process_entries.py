@@ -125,7 +125,12 @@ def generate_badge(data):
     right_y = 450
     right_x = 175
     for event in events:
-        if event in ['sparring','breaking','poomsae']:
+        if event in [
+            "sparring-gr",
+            "sparring-wc",
+            "breaking",
+            "poomsae",
+        ]:
             x = left_x
             y = left_y
             left_y += 30
