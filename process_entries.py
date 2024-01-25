@@ -35,7 +35,7 @@ def send_email(data):
         Zip: {data["zip"]["S"]}
         School: {data["school"]["S"]}
     """
-    if data["reg_type"]["S"] == 'competitor':
+    if data["reg_type"]["S"] == "competitor":
         reg_details += f"""    Coach: {data["coach"]["S"]}
         Birthdate: {data["birthdate"]["S"]}
         Gender: {data["gender"]["S"]}
@@ -43,7 +43,7 @@ def send_email(data):
         Belt: {data["beltRank"]["S"]}
         Events: {data["events"]["S"].replace(',',', ')}
         """
-    
+
     body = f"""
     Dear {data['full_name']['S']},
 
@@ -58,7 +58,7 @@ def send_email(data):
     """
 
     em = EmailMessage()
-    em["From"] = formataddr(('Golden Dragon TKD', email_sender))
+    em["From"] = formataddr(("Golden Dragon TKD", email_sender))
     em["To"] = formataddr((data["full_name"]["S"], email_receiver))
     em["Subject"] = subject
     em.set_content(body)
@@ -81,7 +81,7 @@ def generate_badge(data):
 
     # Opening the template image as the main badge
     # badge = Image.open(r"img/id_template.png")
-    badge = Image.new('RGBA', (400, 600), color='white')
+    badge = Image.new("RGBA", (400, 600), color="white")
     # Opening and resizing the profile image
     profile_img_string = s3.get_object(
         Bucket=os.getenv("PROFILE_PIC_BUCKET"),
@@ -104,17 +104,25 @@ def generate_badge(data):
     # badge_draw.text((362.5, 20), "Ring", font=font, fill="black", anchor="ma")
     # badge_draw.text((362.5, 50), "__", font=font, fill="black", anchor="ma")
     # Name
-    badge_draw.text((200, 275), data["full_name"]["S"], font=font_name, fill="black", anchor="mt")
+    badge_draw.text(
+        (200, 275), data["full_name"]["S"], font=font_name, fill="black", anchor="mt"
+    )
     # School
-    badge_draw.text((200, 310), data["school"]["S"], font=font, fill="black", anchor="ma")
+    badge_draw.text(
+        (200, 310), data["school"]["S"], font=font, fill="black", anchor="ma"
+    )
     # Gender
     badge_draw.text((50, 350), f'Sex: {data["gender"]["S"]}', font=font, fill="black")
     # Age
     badge_draw.text((50, 380), f'Age: {data["age"]["N"]}', font=font, fill="black")
     # Belt
-    badge_draw.text((235, 350), f'Belt: {data["beltRank"]["S"]}', font=font, fill="black")
+    badge_draw.text(
+        (235, 350), f'Belt: {data["beltRank"]["S"]}', font=font, fill="black"
+    )
     # Weight
-    badge_draw.text((200, 380), f'Weight: {data["weight"]["N"]} kg', font=font, fill="black")
+    badge_draw.text(
+        (200, 380), f'Weight: {data["weight"]["N"]} kg', font=font, fill="black"
+    )
     # Divider
     badge_draw.line([(0, 420), (600, 420)], fill="black")
     # Events
@@ -134,16 +142,16 @@ def generate_badge(data):
             x = left_x
             y = left_y
             left_y += 30
-        if event in ['pair poomsae','team poomsae','family poomsae']:
+        if event in ["pair poomsae", "team poomsae", "family poomsae"]:
             x = right_x
             y = right_y
             right_y += 30
-          
+
         badge_draw.text((x, y), f"• {event}", font=font, fill="black")
 
     try:
         # Resize and convert to final size/type
-        badge = badge.resize((250,400), resample=Image.LANCZOS)
+        badge = badge.resize((250, 400), resample=Image.LANCZOS)
         badge = badge.convert("RGB")
         badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
 
@@ -207,7 +215,7 @@ def main(response):
                 print(
                     f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}"
                 )
-                if data['reg_type']['S'] == 'competitor':
+                if data["reg_type"]["S"] == "competitor":
                     generate_badge(data)
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
