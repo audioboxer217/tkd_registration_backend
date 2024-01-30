@@ -134,8 +134,7 @@ def generate_badge(data):
     right_x = 175
     for event in events:
         if event in [
-            "sparring-bgn",
-            "sparring-adv",
+            "sparring",
             "sparring-gr",
             "sparring-wc",
             "breaking",
