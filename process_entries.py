@@ -174,11 +174,9 @@ def generate_badge(data):
 
 
 def main(response):
-    sqs = boto3.client("sqs")
     dynamodb = boto3.client("dynamodb")
 
     stripe.api_key = os.getenv("STRIPE_API_KEY")
-    queue_url = os.getenv("SQS_QUEUE_URL")
     table_name = os.getenv("DB_TABLE")
 
     if response:
