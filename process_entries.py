@@ -10,6 +10,25 @@ from email.utils import formataddr
 from PIL import Image, ImageDraw, ImageFont
 
 
+def add_entry_to_db(data):
+    dynamodb = boto3.client("dynamodb")
+    table_name = os.getenv("DB_TABLE")
+
+    school = data["school"]["S"].replace(" ", "_")
+    full_name = data["full_name"]["S"].replace(" ", "_")
+    data.update(
+        dict(
+            pk={"S": f"{school}-{data['reg_type']['S']}-{full_name}"},
+        )
+    )
+    dynamodb.put_item(
+        TableName=table_name,
+        Item=data,
+        ConditionExpression="attribute_not_exists(pk)",
+    )
+    print(f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}")
+
+
 def send_email(data):
     """Send email using DB Entry Data"""
 
@@ -174,10 +193,7 @@ def generate_badge(data):
 
 
 def main(response):
-    dynamodb = boto3.client("dynamodb")
-
     stripe.api_key = os.getenv("STRIPE_API_KEY")
-    table_name = os.getenv("DB_TABLE")
 
     if response:
         batch_item_failures = []
@@ -196,24 +212,10 @@ def main(response):
                 print("Waiting for Stripe Checkout")
                 raise ValueError("Checkout Not Complete")
             elif checkout.status == "complete":
-                school = data["school"]["S"].replace(" ", "_")
                 del data["checkout"]
                 if data["reg_type"]["S"] == "competitor":
                     data["payment"] = {"S": checkout.payment_intent}
-                full_name = data["full_name"]["S"].replace(" ", "_")
-                data.update(
-                    dict(
-                        pk={"S": f"{school}-{data['reg_type']['S']}-{full_name}"},
-                    )
-                )
-                dynamodb.put_item(
-                    TableName=table_name,
-                    Item=data,
-                    ConditionExpression="attribute_not_exists(pk)",
-                )
-                print(
-                    f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}"
-                )
+                add_entry_to_db(data)
                 if data["reg_type"]["S"] == "competitor":
                     generate_badge(data)
                 send_email(data)
