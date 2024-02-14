@@ -7,7 +7,7 @@ import stripe
 import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 
 def add_entry_to_db(data):
@@ -108,6 +108,7 @@ def generate_badge(data):
     )["Body"].read()
     profile_img = Image.open(io.BytesIO(profile_img_string))
     profile_img = profile_img.resize((250, 250))
+    profile_img = ImageOps.exif_transpose(profile_img)
 
     # Place profile image on background
     badge.paste(profile_img, (75, 20))
