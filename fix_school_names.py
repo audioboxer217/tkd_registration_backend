@@ -22,15 +22,18 @@ school_dict = {
         "Golden dragon taekwondo",
         "Golden Dragon Taekwondo",
         "Golden dragon tkd",
+        "Golden Dragin"
     ],
     "Golden Dragon TKD - Midtown": [
         "Golden Dragon TKD - Midtown",
         "GDKTD MIDTOWN",
         "Golden Dragon Midtown",
+        "Golden Dragon Teakwondo Midtown"
     ],
     "Golden Dragon TKD - Owasso": [
         "Golden Dragon -Owasso",
         "Golden Dragon Owasso",
+        "Golden Dragon TaeKwonDo - Owasso",
         "Golden Dragon Taekwond-Owasso",
         "Golden Dragon Taekwondo Owasso",
         "Golden Dragon taekwondo- Owasso",
