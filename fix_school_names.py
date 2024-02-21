@@ -190,9 +190,11 @@ def update_entry(pk,school_name):
     return response["Attributes"]
 
 def main():
+    new_school_names = set()
     counts = {
         "good": 0,
-        "updated": 0
+        "updated": 0,
+        "skipped": 0
     }
     entries = get_entries()
     for entry in entries:
@@ -202,7 +204,11 @@ def main():
             (k for k,v in school_dict.items() if school_name_clean in v),
             None,
         )
-        if school_name != school_match:
+        if school_match == None:
+            print(f"Add '{school_name}' to list.")
+            new_school_names.add(school_name_clean)
+            counts["skipped"] += 1
+        elif school_name != school_match:
             data = update_entry(entry["pk"]["S"],school_match)
             print(f"{entry["full_name"]["S"]}: {school_name} => {school_match}")
             if entry["reg_type"]["S"] == 'competitor':
@@ -212,7 +218,15 @@ def main():
         else:
             counts["good"] += 1
     
-    print(counts)
+    print(f"""
+Results:
+    Good: {counts['good']}
+    Updated: {counts['updated']}
+    Skipped: {counts['skipped']}
+
+New School Names to Add:
+  {'\n  '.join(sorted(new_school_names))}
+          """)
 
 
 if __name__ == "__main__":
