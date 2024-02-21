@@ -69,7 +69,7 @@ def check_gdrive_files(drive_service):
         drive_service.files()
         .list(
             q="'" + os.getenv("BADGE_GFOLDER") + "' in parents",
-            pageSize=10,
+            pageSize=1000,
             fields="nextPageToken, files(id, name)",
         )
         .execute()
