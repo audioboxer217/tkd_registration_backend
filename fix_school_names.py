@@ -27,6 +27,7 @@ school_dict = {
     ],
     "Golden Dragon TKD - Midtown": [
         "GDKTD MIDTOWN",
+        "GDTKD MIDTOWN",
         "Golden Dragon Midtown",
         "Golden Dragon Teakwondo Midtown",
         "Golden Dragon TKD - Midtown",
@@ -43,6 +44,7 @@ school_dict = {
         "Golden Dragon TKD OWASSO",
         "Golden Dragon, Owasso",
         "GoldenDragon Owasso",
+        "Golden Dragon/ owasso",
     ],
     "Wolfe Pack": ["Wolfe Pack"],
     "Poos TKD": [
@@ -81,6 +83,9 @@ school_dict = {
         "Jeongs Taekwondo Martial Arts",
         "Jeongs Taekwondo Overland Park",
         "Jeongs Taekwondo",
+        "Jeong",
+        "Jeong Taekwondo",
+        "Jeongs Tae Kwon Do",
     ],
     "Lee's US Academy of TKD": ["Lee's US Academy of TKD"],
     "Pruter's TKD Martial Arts Fitness": ["Pruter's TKD Martial Arts Fitness"],
@@ -90,6 +95,7 @@ school_dict = {
     "S J Lee's White Tiger Martial Arts": ["S J Lee's White Tiger Martial Arts"],
     "White Tiger TKD - Rockwall": [
         "Rockwall white tiger taekwondo",
+        "White Tiger Taekwondo - Rockwall",
         "White Tiger - Rockwall",
         "White Tiger Rockwall",
         "White Tiger Rockwell",
@@ -163,6 +169,8 @@ school_dict = {
         "Farfan's TKD",
         "Farfan’s",
         "Farfans Taekwondo",
+        "Farfan Taekwondo",
+        "Farfans",
     ],
     "Off The Chain": ["Off The Chain"],
     "GrandMaster Sean Kim's TKD": [
@@ -171,6 +179,7 @@ school_dict = {
         "GrandMaster Sean Kim's TKD",
     ],
     "Master Jung’s Taekwondo": ["Master Jung’s Taekwondo"],
+    "Young Moo Taekwondo": ["Young Moo Taekwondo"]
 }
 
 
