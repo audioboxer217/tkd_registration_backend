@@ -82,7 +82,7 @@ def main():
             birthYear = int(entry["Birthdate"].split("/")[-1])
             age = str(compYear - birthYear)
             entry_data = dict(
-                full_name={"S": f"{entry['Full Name']}"},
+                full_name={"S": f"{entry['Full Name'].title()}"},
                 email={"S": f"{entry['Email']}"},
                 phone={"S": f"{entry['Phone']}"},
                 address1={"S": f"{entry['Address 1']}"},
@@ -99,7 +99,7 @@ def main():
                 imgFilename={"S": imgFilename},
                 coach={"S": f"{entry['Coach']}"},
                 beltRank={"S": f"{entry['Belt']}"},
-                events={"S": f"{entry['Events']}"},
+                events={"S": f"{entry['Events'].replace(", ",",")}"},
             )
             pe.add_entry_to_db(entry_data)
             pe.generate_badge(entry_data)
