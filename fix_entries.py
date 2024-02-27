@@ -56,6 +56,7 @@ school_dict = {
     "Kim's Academy of Tae Kwon Do": ["Kim's Academy of Tae Kwon Do"],
     "MHCK World Class TKD": [
         "Master H C Kim's World Class Tae Kwon Do Center",
+        "Master H C Kim’s World Class Taekwondo Center",
         "Master HC Kim World Class Taekwondo Center",
         "Master HC Kim's Taekwondo school",
         "Master HC Kim's taekwondo",
@@ -81,6 +82,7 @@ school_dict = {
         "Jeong's TKD Martial Arts",
         "Jeong's",
         "Jeongs Taekwondo Martial Arts",
+        "Jeong Taekwondo Martial Arts",
         "Jeongs Taekwondo Overland Park",
         "Jeongs Taekwondo",
         "Jeong",
@@ -140,6 +142,7 @@ school_dict = {
     "Tiger Jung's TKD": [
         "Tiger Jung Taekwondo",
         "Tiger Jung’s Taekwondo",
+        "Tiger Jung’s Tae Kwon Do",
         "Tiger Jung's TKD",
         "Tiger Jung's World Class Taekwondo",
         "Tiger Jung’s World Class Taekwondo",
@@ -179,7 +182,8 @@ school_dict = {
         "GrandMaster Sean Kim's TKD",
     ],
     "Master Jung’s Taekwondo": ["Master Jung’s Taekwondo"],
-    "Young Moo Taekwondo": ["Young Moo Taekwondo"]
+    "Young Moo Taekwondo": ["Young Moo Taekwondo"],
+    "Geomi": ["Geomi"]
 }
 
 
