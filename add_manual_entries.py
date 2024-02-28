@@ -72,7 +72,7 @@ def main():
         col = 18
         cell = sheet.cell(row, col)
         if cell.value != 'TRUE':
-            imageFileId = re.search(r"\?id=.*", entry["Profile Pic"]).group().strip("?id=")
+            imageFileId = re.search(r"\?id=.*", entry["Profile Pic"]).group().replace("?id=","")
             imageFile = service.files().get(fileId=imageFileId).execute()
             imageExt = imageFile.get("mimeType").split("/")[-1]
             imgFilename = f"{entry['School'].replace(" ", "-")}_competitor_{entry['Full Name'].replace(" ", "-")}.{imageExt}"
