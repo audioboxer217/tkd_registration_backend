@@ -18,6 +18,7 @@ school_dict = {
         "Golden dragon taekwondo",
         "Golden Dragon Taekwondo",
         "Golden Dragon TKD - Tulsa",
+        "Golden Dragon TKD Tulsa",
         "Golden dragon tkd",
         "Golden Dragon TKD",
         "Golden Dragon, Tulsa, OK",
