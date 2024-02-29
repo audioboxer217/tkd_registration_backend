@@ -28,6 +28,9 @@ school_dict = {
     "Golden Dragon TKD - Midtown": [
         "GDKTD MIDTOWN",
         "GDTKD MIDTOWN",
+        "GDTKD - MIDTOWN",
+        "GDTKD- MIDTOWN",
+        "GOLDEN DRAGON - MIDTOWN",
         "Golden Dragon - Midtown",
         "GOLDEN DRAGON TKD -MIDTOWN",
         "Golden Dragon Midtown",
@@ -41,6 +44,7 @@ school_dict = {
         "Golden Dragon TaeKwonDo - Owasso",
         "Golden Dragon Taekwondo Owasso",
         "Golden Dragon taekwondo- Owasso",
+        "Golden dragon Taekwondo Owasso",
         "Golden Dragon TKD - Owasso",
         "Golden Dragon TKD Owasso",
         "Golden Dragon TKD OWASSO",
@@ -158,7 +162,14 @@ school_dict = {
         "Tiger Jungs",
     ],
     "Master Shin's Academy TKD": ["Master Shin's Academy TKD"],
-    "Jido Kwon TKD": ["Jido Kwon TKD","JIDO KWAN TAEKWONDO","Jido Kwan Taekwondo",],
+    "Jido Kwon TKD": [
+        "Jido Kwon TKD",
+        "JIDO KWAN TAEKWONDO",
+        "Jido Kwan Taekwondo",
+        "JIDOKWAN   OKLAHOMA",
+        "JIDOKWAN  Oklahoma",
+        "Jido kwqn Oklahoma",
+    ],
     "Gautreaux's Martial Arts Center": ["Gautreaux's Martial Arts Center"],
     "Master Lee's TKD": ["Master Lee's TKD"],
     "Master Hong's Olympic TKD": [
