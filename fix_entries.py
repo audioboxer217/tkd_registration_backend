@@ -33,6 +33,7 @@ school_dict = {
         "GDTKD- MIDTOWN",
         "GOLDEN DRAGON - MIDTOWN",
         "Golden Dragon - Midtown",
+        "GOLDEN DRAGON TKD- MIDTOWN",
         "GOLDEN DRAGON TKD -MIDTOWN",
         "Golden Dragon Midtown",
         "Golden Dragon Teakwondo Midtown",
