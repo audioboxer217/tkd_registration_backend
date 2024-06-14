@@ -1,0 +1,23 @@
+---
+dev: 
+  app_function: process_entries.main
+  apigateway_enabled: false
+  aws_region: us-east-1
+  profile_name: personal
+  project_name: backend
+  runtime: python3.10
+  s3_bucket: zappa-okc-chmp-backend-dev
+  layers: 
+    - arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p310-Pillow:7
+  events: 
+    - function: process_entries.main
+      event_source: 
+          arn: arn:aws:sqs:us-east-1:799879571353:processing_dev
+          batch_size: 1
+          enabled: true
+  dead_letter_arn: arn:aws:sqs:us-east-1:799879571353:failed_regs_dev
+  remote_env: s3://okchmp-dev-reg-config/backend.json
+  parameter_depth: 1
+  memory_size: 512
+  use_precompiled_packages: true
+  slim_handler: true
