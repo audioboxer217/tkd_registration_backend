@@ -95,7 +95,7 @@ def main():
                 birthdate={"S": f"{entry['Birthdate']}"},
                 age={"N": age},
                 gender={"S": f"{entry['Gender']}"},
-                weight={"N": f"{entry['Weight (kgs)']}"},
+                weight={"N": f"{entry['Weight (lbs)']}"},
                 imgFilename={"S": imgFilename},
                 coach={"S": f"{entry['Coach']}"},
                 beltRank={"S": f"{entry['Belt']}"},

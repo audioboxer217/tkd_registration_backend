@@ -141,7 +141,7 @@ def generate_badge(data):
     )
     # Weight
     badge_draw.text(
-        (200, 380), f'Weight: {data["weight"]["N"]} kg', font=font, fill="black"
+        (200, 380), f'Weight: {data["weight"]["N"]} lbs', font=font, fill="black"
     )
     # Divider
     badge_draw.line([(0, 420), (600, 420)], fill="black")
