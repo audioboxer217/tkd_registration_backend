@@ -47,15 +47,11 @@ def send_email(data):
         Type: {data["reg_type"]["S"]}
         Email: {data["email"]["S"]}
         Phone: {data["phone"]["S"]}
-        Address1: {data["address1"]["S"]}
-        Address2: {data["address2"]["S"]}
-        City: {data["city"]["S"]}
-        State: {data["state"]["S"]}
-        Zip: {data["zip"]["S"]}
         School: {data["school"]["S"]}
     """
     if data["reg_type"]["S"] == "competitor":
         reg_details += f"""    Coach: {data["coach"]["S"]}
+        Parent: {data["parent"]["S"]}
         Birthdate: {data["birthdate"]["S"]}
         Gender: {data["gender"]["S"]}
         Weight: {data["weight"]["N"]}
@@ -73,11 +69,11 @@ def send_email(data):
     If you have any questions please contact us at {contact_email}
 
     Warm Regards,
-    Golden Dragon TKD
+    {comp_name}
     """
 
     em = EmailMessage()
-    em["From"] = formataddr(("Golden Dragon TKD", email_sender))
+    em["From"] = formataddr((comp_name, email_sender))
     em["To"] = formataddr((data["full_name"]["S"], email_receiver))
     em["Subject"] = subject
     em.set_content(body)
@@ -217,8 +213,8 @@ def main(response):
                 if data["reg_type"]["S"] == "competitor":
                     data["payment"] = {"S": checkout.payment_intent}
                 add_entry_to_db(data)
-                if data["reg_type"]["S"] == "competitor":
-                    generate_badge(data)
+                # if data["reg_type"]["S"] == "competitor":
+                #     generate_badge(data)
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
 
