@@ -210,6 +210,36 @@ def generate_badge(data):
     print(f"Badge '{badge_filename}' generated")
 
 
+def check_school(data):
+    # S3 Client
+    s3 = boto3.client("s3")
+    school_list = json.load(
+                    s3.get_object(Bucket=os.environ.get("CONFIG_BUCKET"), Key="schools.json")["Body"]
+                )
+    if data["school"] not in school_list:
+        comp_name = os.environ.get("COMPETITION_NAME")
+        email_server = os.environ.get("EMAIL_SERVER")
+        email_port = os.environ.get("EMAIL_PORT")
+        email_sender = os.environ.get("FROM_EMAIL")
+        email_password = os.environ.get("EMAIL_PASSWD")
+        contact_email = os.environ.get("CONTACT_EMAIL")
+
+        em = EmailMessage()
+        em["From"] = formataddr((comp_name, email_sender))
+        em["To"] = formataddr(("Competition Admin", contact_email))
+        em["Subject"] = f"Entry added with unknown school - {data["school"]}"
+        em.set_content(f"Entry Details:\n{data}")
+
+        # Add SSL (layer of security)
+        context = ssl.create_default_context()
+
+        # Log in and send the email
+        with smtplib.SMTP_SSL(email_server, email_port, context=context) as smtp:
+            smtp.login(email_sender, email_password)
+            smtp.sendmail(email_sender, contact_email, em.as_string())
+            print("Unknown School - Mail Sent!")
+
+
 def main(response):
     stripe.api_key = os.getenv("STRIPE_API_KEY")
 
@@ -238,6 +268,8 @@ def main(response):
                 #     generate_badge(data)
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
+
+                check_school(data)
 
         sqs_batch_response["batchItemFailures"] = batch_item_failures
         return sqs_batch_response
