@@ -56,8 +56,16 @@ def send_email(data):
         Gender: {data["gender"]["S"]}
         Weight: {data["weight"]["N"]}
         Belt: {data["beltRank"]["S"]}
-        Events: {data["events"]["S"].replace(',',', ')}
-        """
+        Events:"""
+
+        for e in data["events"]["S"].split(','):
+            if e.endswith('poomsae') and e != "freestyle poomsae":
+                form_lookup = f"{e.replace(' ','_')}_form"
+                form_name = data[form_lookup]["S"]
+                if form_name.isnumeric():
+                    form_name = f"Taegeuk {form_name} Jang"
+                e += f" (Form: {form_name})"
+            reg_details += f"\n          • {e.title()}"
 
     body = f"""
     Dear {data['full_name']['S']},
@@ -66,6 +74,7 @@ def send_email(data):
 
     Your registration has been accepted with the following details.
     {reg_details}
+
     If you have any questions please contact us at {contact_email}
 
     Warm Regards,
