@@ -59,6 +59,18 @@ def send_email(data):
         Events:"""
 
         for e in data["events"]["S"].split(','):
+            if e.startswith('sparring'):
+                spar_dict = {
+                    'wc': 'world class ',
+                    'gr': 'grass roots '
+                }
+                spar_parts = e.split('-')
+                if len(spar_parts) > 1:
+                    spar_type = spar_dict[spar_parts[1]]
+                else:
+                    spar_type = ''
+                e = f"{spar_type}sparring"
+
             if e.endswith('poomsae') and e != "freestyle poomsae":
                 form_lookup = f"{e.replace(' ','_')}_form"
                 form_name = data[form_lookup]["S"]
