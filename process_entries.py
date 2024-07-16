@@ -222,11 +222,11 @@ def check_school(data):
         email_port = os.environ.get("EMAIL_PORT")
         email_sender = os.environ.get("FROM_EMAIL")
         email_password = os.environ.get("EMAIL_PASSWD")
-        contact_email = os.environ.get("CONTACT_EMAIL")
+        admin_email = os.environ.get("ADMIN_EMAIL")
 
         em = EmailMessage()
         em["From"] = formataddr((comp_name, email_sender))
-        em["To"] = formataddr(("Competition Admin", contact_email))
+        em["To"] = formataddr(("Competition Admin", admin_email))
         em["Subject"] = f"Entry added with unknown school - {data['school']["S"]}"
         em.set_content(f"Entry Details:\n{data}")
 
@@ -236,7 +236,7 @@ def check_school(data):
         # Log in and send the email
         with smtplib.SMTP_SSL(email_server, email_port, context=context) as smtp:
             smtp.login(email_sender, email_password)
-            smtp.sendmail(email_sender, contact_email, em.as_string())
+            smtp.sendmail(email_sender, admin_email, em.as_string())
             print("Unknown School - Mail Sent!")
 
 
