@@ -47,21 +47,37 @@ def send_email(data):
         Type: {data["reg_type"]["S"]}
         Email: {data["email"]["S"]}
         Phone: {data["phone"]["S"]}
-        Address1: {data["address1"]["S"]}
-        Address2: {data["address2"]["S"]}
-        City: {data["city"]["S"]}
-        State: {data["state"]["S"]}
-        Zip: {data["zip"]["S"]}
         School: {data["school"]["S"]}
     """
     if data["reg_type"]["S"] == "competitor":
         reg_details += f"""    Coach: {data["coach"]["S"]}
+        Parent: {data["parent"]["S"]}
         Birthdate: {data["birthdate"]["S"]}
         Gender: {data["gender"]["S"]}
         Weight: {data["weight"]["N"]}
         Belt: {data["beltRank"]["S"]}
-        Events: {data["events"]["S"].replace(',',', ')}
-        """
+        Events:"""
+
+        for e in data["events"]["S"].split(','):
+            if e.startswith('sparring'):
+                spar_dict = {
+                    'wc': 'world class ',
+                    'gr': 'grass roots '
+                }
+                spar_parts = e.split('-')
+                if len(spar_parts) > 1:
+                    spar_type = spar_dict[spar_parts[1]]
+                else:
+                    spar_type = ''
+                e = f"{spar_type}sparring"
+
+            if e.endswith('poomsae') and e != "freestyle poomsae":
+                form_lookup = f"{e.replace(' ','_')}_form"
+                form_name = data[form_lookup]["S"]
+                if form_name.isnumeric():
+                    form_name = f"Taegeuk {form_name} Jang"
+                e += f" (Form: {form_name})"
+            reg_details += f"\n          • {e.title()}"
 
     body = f"""
     Dear {data['full_name']['S']},
@@ -70,14 +86,15 @@ def send_email(data):
 
     Your registration has been accepted with the following details.
     {reg_details}
+
     If you have any questions please contact us at {contact_email}
 
     Warm Regards,
-    Golden Dragon TKD
+    {comp_name}
     """
 
     em = EmailMessage()
-    em["From"] = formataddr(("Golden Dragon TKD", email_sender))
+    em["From"] = formataddr((comp_name, email_sender))
     em["To"] = formataddr((data["full_name"]["S"], email_receiver))
     em["Subject"] = subject
     em.set_content(body)
@@ -141,7 +158,7 @@ def generate_badge(data):
     )
     # Weight
     badge_draw.text(
-        (200, 380), f'Weight: {data["weight"]["N"]} kg', font=font, fill="black"
+        (200, 380), f'Weight: {data["weight"]["N"]} lbs', font=font, fill="black"
     )
     # Divider
     badge_draw.line([(0, 420), (600, 420)], fill="black")
@@ -193,6 +210,36 @@ def generate_badge(data):
     print(f"Badge '{badge_filename}' generated")
 
 
+def check_school(data):
+    # S3 Client
+    s3 = boto3.client("s3")
+    school_list = json.load(
+                    s3.get_object(Bucket=os.environ.get("CONFIG_BUCKET"), Key="schools.json")["Body"]
+                )
+    if data["school"]["S"] not in school_list:
+        comp_name = os.environ.get("COMPETITION_NAME")
+        email_server = os.environ.get("EMAIL_SERVER")
+        email_port = os.environ.get("EMAIL_PORT")
+        email_sender = os.environ.get("FROM_EMAIL")
+        email_password = os.environ.get("EMAIL_PASSWD")
+        admin_email = os.environ.get("ADMIN_EMAIL")
+
+        em = EmailMessage()
+        em["From"] = formataddr((comp_name, email_sender))
+        em["To"] = formataddr(("Competition Admin", admin_email))
+        em["Subject"] = f"Entry added with unknown school - {data['school']["S"]}"
+        em.set_content(f"Entry Details:\n{data}")
+
+        # Add SSL (layer of security)
+        context = ssl.create_default_context()
+
+        # Log in and send the email
+        with smtplib.SMTP_SSL(email_server, email_port, context=context) as smtp:
+            smtp.login(email_sender, email_password)
+            smtp.sendmail(email_sender, admin_email, em.as_string())
+            print("Unknown School - Mail Sent!")
+
+
 def main(response):
     stripe.api_key = os.getenv("STRIPE_API_KEY")
 
@@ -217,10 +264,12 @@ def main(response):
                 if data["reg_type"]["S"] == "competitor":
                     data["payment"] = {"S": checkout.payment_intent}
                 add_entry_to_db(data)
-                if data["reg_type"]["S"] == "competitor":
-                    generate_badge(data)
+                # if data["reg_type"]["S"] == "competitor":
+                #     generate_badge(data)
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
+
+                check_school(data)
 
         sqs_batch_response["batchItemFailures"] = batch_item_failures
         return sqs_batch_response
