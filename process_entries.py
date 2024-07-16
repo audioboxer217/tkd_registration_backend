@@ -216,7 +216,7 @@ def check_school(data):
     school_list = json.load(
                     s3.get_object(Bucket=os.environ.get("CONFIG_BUCKET"), Key="schools.json")["Body"]
                 )
-    if data["school"] not in school_list:
+    if data["school"]["S"] not in school_list:
         comp_name = os.environ.get("COMPETITION_NAME")
         email_server = os.environ.get("EMAIL_SERVER")
         email_port = os.environ.get("EMAIL_PORT")
@@ -227,7 +227,7 @@ def check_school(data):
         em = EmailMessage()
         em["From"] = formataddr((comp_name, email_sender))
         em["To"] = formataddr(("Competition Admin", contact_email))
-        em["Subject"] = f"Entry added with unknown school - {data["school"]}"
+        em["Subject"] = f"Entry added with unknown school - {data['school']["S"]}"
         em.set_content(f"Entry Details:\n{data}")
 
         # Add SSL (layer of security)
