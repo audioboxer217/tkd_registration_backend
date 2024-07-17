@@ -255,14 +255,19 @@ def main(response):
             except Exception:
                 batch_item_failures.append({"itemIdentifier": record["messageId"]})
             print(f"  Processing {data['full_name']['S']}")
-            checkout = stripe.checkout.Session.retrieve(data["checkout"]["S"])
-            if checkout.status == "open":
+            if data["checkout"]["S"] == "manual_entry":
+                checkout_status = 'complete'
+                data["payment"] = {"S": "manual_entry"}
+            else:
+                checkout = stripe.checkout.Session.retrieve(data["checkout"]["S"])
+                checkout_status = checkout.status
+            if checkout_status == "open":
                 print("Waiting for Stripe Checkout")
                 raise ValueError("Checkout Not Complete")
-            elif checkout.status == "complete":
-                del data["checkout"]
-                if data["reg_type"]["S"] == "competitor":
+            elif checkout_status == "complete":
+                if data["reg_type"]["S"] == "competitor" and data["checkout"]["S"] != "manual_entry":
                     data["payment"] = {"S": checkout.payment_intent}
+                del data["checkout"]
                 add_entry_to_db(data)
                 # if data["reg_type"]["S"] == "competitor":
                 #     generate_badge(data)
