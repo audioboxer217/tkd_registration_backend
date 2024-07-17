@@ -227,7 +227,7 @@ def check_school(data):
         em = EmailMessage()
         em["From"] = formataddr((comp_name, email_sender))
         em["To"] = formataddr(("Competition Admin", admin_email))
-        em["Subject"] = f"Entry added with unknown school - {data['school']["S"]}"
+        em["Subject"] = f"Entry added with unknown school - {data['school']['S']}"
         em.set_content(f"Entry Details:\n{data}")
 
         # Add SSL (layer of security)
