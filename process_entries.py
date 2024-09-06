@@ -284,4 +284,6 @@ def main(response):
 
 
 if __name__ == "__main__":
+    with open('tests/input.json', 'r') as input:
+        response = json.load(input)
     main(response)
