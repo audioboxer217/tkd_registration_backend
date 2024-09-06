@@ -214,8 +214,8 @@ def check_school(data):
     # S3 Client
     s3 = boto3.client("s3")
     school_list = json.load(
-                    s3.get_object(Bucket=os.environ.get("CONFIG_BUCKET"), Key="schools.json")["Body"]
-                )
+        s3.get_object(Bucket=os.environ.get("CONFIG_BUCKET"), Key="schools.json")["Body"]
+    )
     if data["school"]["S"] not in school_list:
         comp_name = os.environ.get("COMPETITION_NAME")
         email_server = os.environ.get("EMAIL_SERVER")
