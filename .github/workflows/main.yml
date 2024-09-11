@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  DB_TABLE: ${{ env.DB_TABLE }}
+  DB_TABLE: "${{ env.DB_TABLE }}"
 
 jobs:
   backend:
