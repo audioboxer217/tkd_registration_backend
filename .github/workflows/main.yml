@@ -67,7 +67,7 @@ jobs:
           Entry added for Test User as a competitor
           Mail Sent!
             Test User Processed Successfully
-        actual: ${{ steps.execute-process_entries.outputs.value }}
+        actual: ${{ steps }}
 
     - id: execute-cleanup
       name: Run 'cleanup.py'
