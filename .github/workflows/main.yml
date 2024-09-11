@@ -57,9 +57,8 @@ jobs:
         PROFILE_PIC_BUCKET: "${{ vars.PROFILE_PIC_BUCKET }}"
         SQS_QUEUE_URL: "${{ vars.SQS_QUEUE_URL }}"
         STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
-      run: |
-        python process_entries.py
-    - run: echo ${{join(steps.execute-process_entries.outputs.*, '\n')}}
+      run: echo "results=$(python process_entries.py)" >> "$GITHUB_OUTPUT"
+    - run: echo ${{steps.execute-process_entries.outputs.results}}
     - uses: nick-fields/assert-action@v2
       with:
         expected: |
