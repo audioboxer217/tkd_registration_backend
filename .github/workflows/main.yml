@@ -26,9 +26,9 @@ jobs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: arn:aws:iam::799879571353:role/GitHub_Actions
+        role-to-assume: ${{ vars.AWS_ROLE_ARN}}
         role-session-name: BackendTest
-        aws-region: us-east-1
+        aws-region: ${{ vars.AWS_DEFAULT_REGION }}
 
     - name: setup python
       uses: actions/setup-python@v5
