@@ -9,27 +9,26 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  BADGE_BUCKET: "${{ env.BADGE_BUCKET }}"
-  BADGE_GFOLDER: "${{ env.BADGE_GFOLDER }}"
-  COMPETITION_NAME: "${{ env.COMPETITION_NAME }}"
-  COMPETITION_YEAR: "${{ env.COMPETITION_YEAR }}"
-  CONFIG_BUCKET: "${{ env.CONFIG_BUCKET }}"
-  CONTACT_EMAIL: "${{ env.CONTACT_EMAIL }}"
-  DB_TABLE: "${{ env.DB_TABLE }}"
-  EMAIL_PASSWD: "${{ secrets.EMAIL_PASSWORD }}"
-  EMAIL_PORT: "${{ env.EMAIL_PORT }}"
-  EMAIL_SERVER: "${{ env.EMAIL_SERVER }}"
-  FROM_EMAIL: "${{ env.FROM_EMAIL }}"
-  PROFILE_PIC_BUCKET: "${{ env.PROFILE_PIC_BUCKET }}"
-  SQS_QUEUE_URL: "${{ env.SQS_QUEUE_URL }}"
-  STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
-
 jobs:
   backend:
     name: 'Backend Tests'
     runs-on: ubuntu-latest
     environment: Test
+    env:
+      BADGE_BUCKET: "${{ env.BADGE_BUCKET }}"
+      BADGE_GFOLDER: "${{ env.BADGE_GFOLDER }}"
+      COMPETITION_NAME: "${{ env.COMPETITION_NAME }}"
+      COMPETITION_YEAR: "${{ env.COMPETITION_YEAR }}"
+      CONFIG_BUCKET: "${{ env.CONFIG_BUCKET }}"
+      CONTACT_EMAIL: "${{ env.CONTACT_EMAIL }}"
+      DB_TABLE: "${{ env.DB_TABLE }}"
+      EMAIL_PASSWD: "${{ secrets.EMAIL_PASSWORD }}"
+      EMAIL_PORT: "${{ env.EMAIL_PORT }}"
+      EMAIL_SERVER: "${{ env.EMAIL_SERVER }}"
+      FROM_EMAIL: "${{ env.FROM_EMAIL }}"
+      PROFILE_PIC_BUCKET: "${{ env.PROFILE_PIC_BUCKET }}"
+      SQS_QUEUE_URL: "${{ env.SQS_QUEUE_URL }}"
+      STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
 
     defaults:
       run:
