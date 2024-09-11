@@ -9,9 +9,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  DB_TABLE: "${{ env.DB_TABLE }}"
-
 jobs:
   backend:
     name: 'Backend Tests'
@@ -46,6 +43,7 @@ jobs:
     - id: execute-process_entries
       name: Run 'process_entries.py'
       run: |
+        echo "Table: $DB_TABLE"
         python process_entries.py
     - uses: nick-fields/assert-action@v2
       with:
