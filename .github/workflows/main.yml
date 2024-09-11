@@ -1,0 +1,87 @@
+name: 'Backend Tests'
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  backend:
+    name: 'Backend Tests'
+    runs-on: ubuntu-latest
+    environment: Test
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+        role-session-name: BackendTest
+        aws-region: ${{ vars.AWS_DEFAULT_REGION }}
+
+    - name: setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r dev_requirements.txt
+
+    - id: execute-process_entries
+      name: Run 'process_entries.py'
+      env:
+        BADGE_BUCKET: "${{ vars.BADGE_BUCKET }}"
+        BADGE_GFOLDER: "${{ vars.BADGE_GFOLDER }}"
+        COMPETITION_NAME: "${{ vars.COMPETITION_NAME }}"
+        COMPETITION_YEAR: "${{ vars.COMPETITION_YEAR }}"
+        CONFIG_BUCKET: "${{ vars.CONFIG_BUCKET }}"
+        CONTACT_EMAIL: "${{ vars.CONTACT_EMAIL }}"
+        DB_TABLE: "${{ vars.DB_TABLE }}"
+        EMAIL_PASSWD: "${{ secrets.EMAIL_PASSWORD }}"
+        EMAIL_PORT: "${{ vars.EMAIL_PORT }}"
+        EMAIL_SERVER: "${{ vars.EMAIL_SERVER }}"
+        FROM_EMAIL: "${{ vars.FROM_EMAIL }}"
+        PROFILE_PIC_BUCKET: "${{ vars.PROFILE_PIC_BUCKET }}"
+        SQS_QUEUE_URL: "${{ vars.SQS_QUEUE_URL }}"
+        STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
+      run: |
+        echo 'results<<EOF' >> $GITHUB_OUTPUT
+        python process_entries.py >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+        echo '### User Added! :rocket:' >> $GITHUB_STEP_SUMMARY
+    - uses: nick-fields/assert-action@v2
+      with:
+        expected: |
+          Processing 1 entries
+            Processing Test User
+          Entry added for Test User as a competitor
+          Mail Sent!
+            Test User Processed Successfully
+        actual: ${{steps.execute-process_entries.outputs.results}}
+
+    - id: execute-cleanup
+      name: Run 'cleanup.py'
+      env:
+        DB_TABLE: "${{ vars.DB_TABLE }}"
+      run: |
+        echo "results=$(python tests/cleanup_test_entry.py)" >> "$GITHUB_OUTPUT"
+        echo '### User Removed! :x:' >> $GITHUB_STEP_SUMMARY
+      if: always()
+    - uses: nick-fields/assert-action@v2
+      with:
+        expected: Test User successfully deleted
+        actual: ${{ steps.execute-cleanup.outputs.results }}
+      if: always()
