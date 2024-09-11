@@ -1,0 +1,64 @@
+name: 'Backend Tests'
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  backend:
+    name: 'Backend Tests'
+    runs-on: ubuntu-latest
+    environment: Test
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: arn:aws:iam::799879571353:role/GitHub_Actions
+        role-session-name: TerraformTest
+        aws-region: us-east-1
+
+    - name: setup python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.10
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r dev_requirements.txt
+
+    - id: execute-process_entries
+      name: Run 'process_entries.py'
+      run: |
+        python process_entries.py
+    - uses: nick-fields/assert-action@v2
+      with:
+        expected: |
+          Processing 1 entries
+            Processing Test User
+          Entry added for Test User as a competitor
+          Mail Sent!
+            Test User Processed Successfully
+        actual: ${{ steps.execute-process_entries.outputs.value }}
+
+    - id: execute-cleanup
+      name: Run 'cleanup.py'
+      run: |
+        python tests/cleanup_test_entry.py
+    - uses: nick-fields/assert-action@v2
+      with:
+        expected: Test User successfully deleted
+        actual: ${{ steps.execute-cleanup.outputs.value }}
