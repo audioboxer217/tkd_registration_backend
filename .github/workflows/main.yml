@@ -18,21 +18,6 @@ jobs:
     defaults:
       run:
         shell: bash
-      env:
-        BADGE_BUCKET: "${{ env.BADGE_BUCKET }}"
-        BADGE_GFOLDER: "${{ env.BADGE_GFOLDER }}"
-        COMPETITION_NAME: "${{ env.COMPETITION_NAME }}"
-        COMPETITION_YEAR: "${{ env.COMPETITION_YEAR }}"
-        CONFIG_BUCKET: "${{ env.CONFIG_BUCKET }}"
-        CONTACT_EMAIL: "${{ env.CONTACT_EMAIL }}"
-        DB_TABLE: "${{ env.DB_TABLE }}"
-        EMAIL_PASSWD: "${{ secrets.EMAIL_PASSWORD }}"
-        EMAIL_PORT: "${{ env.EMAIL_PORT }}"
-        EMAIL_SERVER: "${{ env.EMAIL_SERVER }}"
-        FROM_EMAIL: "${{ env.FROM_EMAIL }}"
-        PROFILE_PIC_BUCKET: "${{ env.PROFILE_PIC_BUCKET }}"
-        SQS_QUEUE_URL: "${{ env.SQS_QUEUE_URL }}"
-        STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
 
     steps:
     - name: Checkout
@@ -57,6 +42,21 @@ jobs:
 
     - id: execute-process_entries
       name: Run 'process_entries.py'
+      env:
+        BADGE_BUCKET: "${{ env.BADGE_BUCKET }}"
+        BADGE_GFOLDER: "${{ env.BADGE_GFOLDER }}"
+        COMPETITION_NAME: "${{ env.COMPETITION_NAME }}"
+        COMPETITION_YEAR: "${{ env.COMPETITION_YEAR }}"
+        CONFIG_BUCKET: "${{ env.CONFIG_BUCKET }}"
+        CONTACT_EMAIL: "${{ env.CONTACT_EMAIL }}"
+        DB_TABLE: "${{ env.DB_TABLE }}"
+        EMAIL_PASSWD: "${{ secrets.EMAIL_PASSWORD }}"
+        EMAIL_PORT: "${{ env.EMAIL_PORT }}"
+        EMAIL_SERVER: "${{ env.EMAIL_SERVER }}"
+        FROM_EMAIL: "${{ env.FROM_EMAIL }}"
+        PROFILE_PIC_BUCKET: "${{ env.PROFILE_PIC_BUCKET }}"
+        SQS_QUEUE_URL: "${{ env.SQS_QUEUE_URL }}"
+        STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
       run: |
         echo "Table: $DB_TABLE"
         python process_entries.py
@@ -72,6 +72,8 @@ jobs:
 
     - id: execute-cleanup
       name: Run 'cleanup.py'
+      env:
+        DB_TABLE: "${{ env.DB_TABLE }}"
       run: |
         python tests/cleanup_test_entry.py
     - uses: nick-fields/assert-action@v2
