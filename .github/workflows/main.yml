@@ -58,8 +58,6 @@ jobs:
         SQS_QUEUE_URL: "${{ vars.SQS_QUEUE_URL }}"
         STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
       run: |
-        echo "Table: $DB_TABLE"
-        echo "Table: ${{ vars.DB_TABLE}}"
         python process_entries.py
     - uses: nick-fields/assert-action@v2
       with:
