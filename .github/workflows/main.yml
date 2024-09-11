@@ -59,6 +59,7 @@ jobs:
         STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
       run: |
         python process_entries.py
+    - run: echo ${{ steps }}
     - uses: nick-fields/assert-action@v2
       with:
         expected: |
