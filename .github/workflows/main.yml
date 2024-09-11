@@ -9,6 +9,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  DB_TABLE: ${{ env.DB_TABLE }}
+
 jobs:
   backend:
     name: 'Backend Tests'
