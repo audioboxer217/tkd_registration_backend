@@ -61,6 +61,7 @@ jobs:
         echo 'results<<EOF' >> $GITHUB_OUTPUT
         python process_entries.py >> $GITHUB_OUTPUT
         echo 'EOF' >> $GITHUB_OUTPUT
+        echo '### User Added! :rocket:' >> $GITHUB_STEP_SUMMARY
     - uses: nick-fields/assert-action@v2
       with:
         expected: |
@@ -75,7 +76,9 @@ jobs:
       name: Run 'cleanup.py'
       env:
         DB_TABLE: "${{ vars.DB_TABLE }}"
-      run: echo "results=$(python tests/cleanup_test_entry.py)" >> "$GITHUB_OUTPUT"
+      run: |
+        echo "results=$(python tests/cleanup_test_entry.py)" >> "$GITHUB_OUTPUT"
+        echo '### User Removed! :x:' >> $GITHUB_STEP_SUMMARY
       if: always()
     - uses: nick-fields/assert-action@v2
       with:
