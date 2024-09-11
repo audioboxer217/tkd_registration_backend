@@ -27,7 +27,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v3
       with:
         role-to-assume: arn:aws:iam::799879571353:role/GitHub_Actions
-        role-session-name: TerraformTest
+        role-session-name: BackendTest
         aws-region: us-east-1
 
     - name: setup python
