@@ -57,4 +57,5 @@ jobs:
         PROFILE_PIC_BUCKET: "${{ vars.PROFILE_PIC_BUCKET }}"
         SQS_QUEUE_URL: "${{ vars.SQS_QUEUE_URL }}"
         STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
+        STRIPE_TEST_SESSION: "${{ secrets.STRIPE_TEST_SESSION }}"
       run: pytest -qrA --tb=no >> $GITHUB_STEP_SUMMARY
