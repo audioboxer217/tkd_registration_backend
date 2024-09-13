@@ -26,7 +26,11 @@ def add_entry_to_db(data):
         Item=data,
         ConditionExpression="attribute_not_exists(pk)",
     )
-    print(f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}")
+
+    ret_msg = f"Entry added for {data['full_name']['S']} as a {data['reg_type']['S']}"
+    
+    print(ret_msg)
+    return ret_msg
 
 
 def send_email(data):
@@ -106,7 +110,11 @@ def send_email(data):
     with smtplib.SMTP_SSL(email_server, email_port, context=context) as smtp:
         smtp.login(email_sender, email_password)
         smtp.sendmail(email_sender, email_receiver, em.as_string())
-        print("Mail Sent!")
+    
+    ret_msg = "Mail Sent!"
+
+    print(ret_msg)
+    return ret_msg
 
 
 def generate_badge(data):
@@ -205,9 +213,12 @@ def generate_badge(data):
         s3.upload_fileobj(badge_file, os.getenv("BADGE_BUCKET"), badge_filename)
 
     except Exception as e:
-        print(f"{e = }")
+        ret_msg = f"{e = }"
 
-    print(f"Badge '{badge_filename}' generated")
+    ret_msg = f"Badge '{badge_filename}' generated"
+
+    print(ret_msg)
+    return ret_msg
 
 
 def check_school(data):
@@ -237,7 +248,13 @@ def check_school(data):
         with smtplib.SMTP_SSL(email_server, email_port, context=context) as smtp:
             smtp.login(email_sender, email_password)
             smtp.sendmail(email_sender, admin_email, em.as_string())
-            print("Unknown School - Mail Sent!")
+
+        ret_msg = "Unknown School - Mail Sent!"
+    else:
+        ret_msg = "School Found!"
+
+    print(ret_msg)
+    return ret_msg
 
 
 def main(response):
