@@ -7,3 +7,4 @@ Pillow==9.5.0
 python-dotenv
 gspread
 oauth2client
+pytest

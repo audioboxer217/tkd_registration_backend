@@ -40,8 +40,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r dev_requirements.txt
 
-    - id: execute-process_entries
-      name: Run 'process_entries.py'
+    - name: Run Tests
       env:
         BADGE_BUCKET: "${{ vars.BADGE_BUCKET }}"
         BADGE_GFOLDER: "${{ vars.BADGE_GFOLDER }}"
@@ -57,31 +56,4 @@ jobs:
         PROFILE_PIC_BUCKET: "${{ vars.PROFILE_PIC_BUCKET }}"
         SQS_QUEUE_URL: "${{ vars.SQS_QUEUE_URL }}"
         STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
-      run: |
-        echo 'results<<EOF' >> $GITHUB_OUTPUT
-        python process_entries.py >> $GITHUB_OUTPUT
-        echo 'EOF' >> $GITHUB_OUTPUT
-        echo '### User Added! :rocket:' >> $GITHUB_STEP_SUMMARY
-    - uses: nick-fields/assert-action@v2
-      with:
-        expected: |
-          Processing 1 entries
-            Processing Test User
-          Entry added for Test User as a competitor
-          Mail Sent!
-            Test User Processed Successfully
-        actual: ${{steps.execute-process_entries.outputs.results}}
-
-    - id: execute-cleanup
-      name: Run 'cleanup.py'
-      env:
-        DB_TABLE: "${{ vars.DB_TABLE }}"
-      run: |
-        echo "results=$(python tests/cleanup_test_entry.py)" >> "$GITHUB_OUTPUT"
-        echo '### User Removed! :x:' >> $GITHUB_STEP_SUMMARY
-      if: always()
-    - uses: nick-fields/assert-action@v2
-      with:
-        expected: Test User successfully deleted
-        actual: ${{ steps.execute-cleanup.outputs.results }}
-      if: always()
+      run: pytest -qrA --tb=no >> $GITHUB_STEP_SUMMARY
