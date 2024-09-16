@@ -1,12 +1,6 @@
-boto3~=1.35.0
-stripe~=10.10.0
-zappa~=0.59.0
-urllib3~=1.0
-google-api-python-client>=2.115.0
 Pillow==9.5.0
-python-dotenv
-gspread
-oauth2client
-pytest
-zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
-requests>=2.32.2 # not directly required, pinned by Snyk to avoid a vulnerability
+python-dotenv~=1.0
+gspread~=6.1
+oauth2client~=4.1
+pytest~=8.0.0
+ruff~=0.6.5
