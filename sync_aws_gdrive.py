@@ -4,12 +4,10 @@ import io
 import os
 import boto3
 import json
-from dotenv import load_dotenv
 from google.oauth2 import service_account
 from apiclient import discovery
 from apiclient.http import MediaIoBaseUpload # type: ignore
 
-load_dotenv("../backend.env")
 s3 = boto3.client("s3")
 
 

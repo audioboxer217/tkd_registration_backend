@@ -2,10 +2,7 @@
 
 import os
 import boto3
-from dotenv import load_dotenv
 import process_entries as pe
-
-load_dotenv("../backend.env")
 
 CONFIRM_CHOICES = ["y", "Y", "yes", "Yes"]
 
