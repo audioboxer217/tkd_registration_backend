@@ -6,11 +6,7 @@ import boto3
 import json
 from dotenv import load_dotenv
 from google.oauth2 import service_account
-import googleapiclient.discovery
 from apiclient import discovery
-from apiclient import errors
-
-from apiclient.http import MediaFileUpload
 from apiclient.http import MediaIoBaseUpload
 
 load_dotenv("../backend.env")

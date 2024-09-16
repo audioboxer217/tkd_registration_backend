@@ -26,7 +26,7 @@ def get_entries():
 
 
 def prompt_user(entry_names):
-    print(f"\nWhich entry do you want to work with?")
+    print("\nWhich entry do you want to work with?")
     for i, name in enumerate(entry_names):
         print(f"{i+1}. {name}")
     print("q. Quit")
