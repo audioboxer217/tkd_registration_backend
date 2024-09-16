@@ -184,6 +184,7 @@ def generate_badge(data):
             "sparring-wc",
             "breaking",
             "poomsae",
+            "Little Tiger Showcase",
         ]:
             x = left_x
             y = left_y
