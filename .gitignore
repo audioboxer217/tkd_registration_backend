@@ -2,6 +2,7 @@
 backend.json
 frontend.json
 .environments/*
+output/
 
 ## General Items ##
 *.env
