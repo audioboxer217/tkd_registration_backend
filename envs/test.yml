@@ -5,10 +5,10 @@ dev:
   aws_region: us-east-1
   profile_name: personal
   project_name: backend
-  runtime: python3.10
+  runtime: python3.11
   s3_bucket: zappa-okc-chmp-backend-dev
   layers: 
-    - arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p310-Pillow:8
+    - arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p311-Pillow:4
   events: 
     - function: process_entries.main
       event_source: 

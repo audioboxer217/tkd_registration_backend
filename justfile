@@ -38,3 +38,20 @@ logs ACCT='test' ENV='dev': (_zappa "tail" ACCT ENV)
 
 # Undeploy a running environment
 undeploy ACCT='test' ENV='dev': (_zappa "undeploy" ACCT ENV)
+
+archive_db TABLE OUTPUT_FILE='output/full_lookup.json' profile='personal' venv_dir='.venv':
+  @just _aws_login {{ profile }}
+  if [ ! -d $(dirname "{{ OUTPUT_FILE }}") ];then mkdir -p $(dirname "{{ OUTPUT_FILE }}");fi
+  ./{{ venv_dir }}{{ python_subdir }}{{ python_exec }} \
+    ./scripts/archive_reg_db.py \
+    -p {{ profile }} \
+    -o {{ OUTPUT_FILE }} \
+    {{ TABLE }}
+
+load_lookup_db INPUT_FILE='output/full_lookup.json' TABLE='' profile='personal' venv_dir='.venv':
+  @just _aws_login {{ profile }}
+  ./{{ venv_dir }}{{ python_subdir }}{{ python_exec }} \
+    ./scripts/load_lookup_db.py \
+    -p {{ profile }} \
+    {{ if TABLE != '' { "-t " + TABLE } else { "" } }} \
+    {{ INPUT_FILE }}
