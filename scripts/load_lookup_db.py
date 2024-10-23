@@ -39,7 +39,6 @@ def main():
         dynamodb.put_item(
             TableName=args.table,
             Item=entry,
-            ConditionExpression="attribute_not_exists(pk)",
         )
 
         print(f"Entry added for {name}")
