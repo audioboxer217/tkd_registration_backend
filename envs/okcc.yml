@@ -7,8 +7,6 @@ prod:
   project_name: backend
   runtime: python3.10
   s3_bucket: zappa-okc-chmp-backend-prod
-  layers: 
-    - arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p310-Pillow:8
   events: 
     - function: process_entries.main
       event_source: 

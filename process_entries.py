@@ -1,5 +1,5 @@
 import os
-import io
+import re
 import ssl
 import json
 import boto3
@@ -7,8 +7,6 @@ import stripe
 import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
-from PIL import Image, ImageDraw, ImageFont, ImageOps
-
 
 def add_entry_to_db(data):
     dynamodb = boto3.client("dynamodb")
