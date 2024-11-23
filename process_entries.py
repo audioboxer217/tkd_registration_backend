@@ -47,9 +47,7 @@ def send_email(data):
     email_receiver = data["email"]["S"]
     subject = f"{comp_year} {comp_name} Registration"
 
-    reg_details = f"""
-        Name: {data["full_name"]["S"]}
-        Item: {data["reg_type"]["S"]}
+    reg_details = f"""Name: {data["full_name"]["S"]}
         Email: {data["email"]["S"]}
         Phone: {data["phone"]["S"]}
     """
@@ -60,20 +58,49 @@ def send_email(data):
         Birthdate: {data["birthdate"]["S"]}
         Gender: {data["gender"]["S"]}
         Belt: {data["beltRank"]["S"]}"""
+    else:
+        order_details = ""
+        if  int(data["num_tickets"]["N"]) > 0:
+            order_details += f"Tickets: {data['num_tickets']['N']}\n"
+        
+        for k,v in data["tshirts"]["M"].items():
+            if int(v["N"]) > 0:
+                size = k.replace("tshirt_", "T-Shirt ")
+                order_details += f"        {size}: {v['N']}\n"
 
-    body = f"""
-    Dear {data['full_name']['S']},
-
-    Thank you for being a part of the {comp_year} {comp_name}!
-
-    Your registration has been accepted with the following details.
-    {reg_details}
-
+    body_begin = f"Dear {data['full_name']['S']},"
+    body_end = f"""
     If you have any questions please contact us at {contact_email}
 
     Warm Regards,
     {comp_name}
     """
+    {body_begin}
+
+    if data["reg_type"]["S"] == "seminar":
+        body = f"""
+        {body_begin}
+
+        Thank you for being a part of the {comp_year} {comp_name}!
+
+        Your registration has been accepted with the following details.
+        {reg_details}
+
+        {body_end}
+        """
+    else:
+        body = f"""
+        {body_begin}
+
+        Thank you for your {comp_year} {comp_name} purchase!
+
+        Contact Details:
+        {reg_details}
+        Order Details:
+        {order_details}
+
+        {body_end}
+        """
 
     em = EmailMessage()
     em["From"] = formataddr((comp_name, email_sender))
@@ -159,7 +186,7 @@ def main(response):
                 if data["checkout"]["S"] != "manual_entry":
                     data["payment"] = {"S": checkout.payment_intent}
                 del data["checkout"]
-                add_entry_to_db(data)
+                # add_entry_to_db(data)
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
 
