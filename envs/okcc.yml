@@ -16,7 +16,7 @@ prod:
           batch_size: 1
           enabled: true
   dead_letter_arn: arn:aws:sqs:us-east-1:851725437474:failed_registrations
-  remote_env: s3://tkd-reg-config20240703153411881400000005/backend.json
+  remote_env: s3://tkd-reg-config20241122160149102200000006/backend.json
   parameter_depth: 1
   memory_size: 512
   use_precompiled_packages: true
