@@ -186,7 +186,7 @@ def main(response):
                 if data["checkout"]["S"] != "manual_entry":
                     data["payment"] = {"S": checkout.payment_intent}
                 del data["checkout"]
-                # add_entry_to_db(data)
+                add_entry_to_db(data)
                 send_email(data)
                 print(f"  {data['full_name']['S']} Processed Successfully")
 
