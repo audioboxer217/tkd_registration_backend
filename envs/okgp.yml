@@ -38,7 +38,7 @@ prod:
         batch_size: 1
         enabled: true
   dead_letter_arn: arn:aws:sqs:us-east-1:058264481846:failed_registrations
-  remote_env: s3://okgp24-reg-config/backend.json
+  remote_env: s3://okgp25-reg-config/backend.json
   parameter_depth: 1
   memory_size: 512
   use_precompiled_packages: true
