@@ -61,3 +61,13 @@ jobs:
         STRIPE_API_KEY: "${{ secrets.STRIPE_API_KEY }}"
         STRIPE_TEST_SESSION: "${{ secrets.STRIPE_TEST_SESSION }}"
       run: uv run pytest -qrA --tb=no >> $GITHUB_STEP_SUMMARY
+
+  security:
+    runs-on: ubuntu-latest
+    environment: Test
+    steps:
+      - uses: actions/checkout@main
+      - name: Run Safety CLI to check for vulnerabilities
+        uses: pyupio/safety-action@v1
+        with:
+          api-key: "${{ secrets.SAFETY_API_KEY }}"
