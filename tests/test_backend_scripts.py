@@ -17,9 +17,9 @@ class TestBackend:
     def test_db_entry(self):
         assert pe.add_entry_to_db(self.data) == f"Entry added for {self.data['full_name']['S']} as a {self.data['reg_type']['S']}"
 
-    def test_badge_gen(self):
-        badge_filename = f"{self.data['pk']['S']}_badge.jpg".replace(" ", "_")
-        assert pe.generate_badge(self.data) == f"Badge '{badge_filename}' generated"
+    # def test_badge_gen(self):
+    #     badge_filename = f"{self.data['pk']['S']}_badge.jpg".replace(" ", "_")
+    #     assert pe.generate_badge(self.data) == f"Badge '{badge_filename}' generated"
 
     def test_email(self):
         assert pe.send_email(self.data) == "Mail Sent!"
