@@ -4,7 +4,12 @@
 import os
 import boto3
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+from dotenv import load_dotenv
 
+script_path = os.path.abspath(__file__)
+script_directory = os.path.dirname(script_path)
+parent_directory = os.path.dirname(script_directory)
+os.chdir(parent_directory)
 
 def get_entries():
     dynamodb = boto3.client("dynamodb")
@@ -32,8 +37,8 @@ def generate_badge(data):
     # badge = Image.open(r"img/id_template.png")
     badge = Image.new("RGBA", (400, 600), color="white")
     # Opening and resizing the profile image
-    profile_img = Image.open("img/okgp_logo.png")
-    profile_img = profile_img.resize((400, 275))
+    profile_img = Image.open(f"img/{os.getenv('BADGE_IMG_FILENAME')}")
+    profile_img = profile_img.resize((400, 250))
     profile_img = ImageOps.exif_transpose(profile_img)
 
     # Place profile image on background
@@ -89,11 +94,12 @@ def generate_badge(data):
             "poomsae",
             "freestyle poomsae",
             "little_dragon",
+            "little_tiger",
         ]:
             x = left_x
             y = left_y
             left_y += 30
-        if event in ["pair poomsae", "team poomsae", "family poomsae", "weapons"]:
+        if event in ["world-class poomsae", "pair poomsae", "team poomsae", "family poomsae"]:
             x = right_x
             y = right_y
             right_y += 30
@@ -125,7 +131,9 @@ def generate_badge(data):
     print(ret_msg)
     return ret_msg
 
+
 def main():
+    load_dotenv()
     entries = get_entries()
 
     for entry in entries:
