@@ -108,7 +108,7 @@ def generate_badge(data):
 
     try:
         # Resize and convert to final size/type
-        badge = badge.resize((250, 400), resample=Image.LANCZOS)
+        badge = badge.resize((250, 400), resample=Image.Resampling.LANCZOS)
         badge = badge.convert("RGB")
         badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
 
@@ -123,10 +123,11 @@ def generate_badge(data):
         # Upload to S3
         # s3.upload_fileobj(badge_file, os.getenv("BADGE_BUCKET"), badge_filename)
 
+        ret_msg = f"Badge '{badge_filename}' generated"
+
     except Exception as e:
         ret_msg = f"{e = }"
 
-    ret_msg = f"Badge '{badge_filename}' generated"
 
     print(ret_msg)
     return ret_msg
