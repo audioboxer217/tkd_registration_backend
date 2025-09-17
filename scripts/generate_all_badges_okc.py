@@ -3,10 +3,8 @@
 # import io
 import os
 import boto3
-import json
 from PIL import Image, ImageDraw, ImageFont
 from dotenv import load_dotenv
-from requests import get
 
 script_path = os.path.abspath(__file__)
 script_directory = os.path.dirname(script_path)
@@ -76,9 +74,14 @@ def generate_badge(data):
         (200, 100), full_name, font=font_name, fill="black", anchor="mt"
     )
     # School
+    school_name_arr = data['school']['S'].split(' - ')
     badge_draw.text(
-        (200, 130), data["school"]["S"], font=font_school, fill="black", anchor="ma"
+        (200, 130), school_name_arr[0], font=font_school, fill="black", anchor="ma"
     )
+    if len(school_name_arr) > 1:
+        badge_draw.text(
+            (200, 160), school_name_arr[1], font=font_school, fill="black", anchor="ma"
+        )
     # Belt
     if "black" in data["beltRank"]["S"]:
         data["beltRank"]["S"] = "black"
@@ -149,6 +152,7 @@ def main():
 
     for entry in entries:
         print(f"Generating badge for {entry['full_name']['S']}")
+
         generate_badge(entry)
 
 
