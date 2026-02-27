@@ -21,7 +21,8 @@ This is the backend for the TKD (Taekwondo) Registration Project. It processes c
 ## Common Commands
 ```bash
 # Install dependencies (first-time setup)
-just bootstrap
+uv python install
+uv sync --all-extras --dev
 
 # Run linter
 uv run ruff check .
@@ -30,10 +31,10 @@ uv run ruff check .
 uv run pytest -qrA --tb=short
 
 # Deploy to an environment
-just deploy <acct> <env>
+uv run zappa deploy -s envs/<acct>.yml <env>
 
 # Update an existing deployment
-just update <acct> <env>
+uv run zappa update -s envs/<acct>.yml <env>
 ```
 
 ## Environment Variables
