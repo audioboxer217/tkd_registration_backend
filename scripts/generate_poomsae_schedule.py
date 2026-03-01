@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 
 # import io
-# import os
+import os
 import boto3
+from dotenv import load_dotenv
+
+script_path = os.path.abspath(__file__)
+script_directory = os.path.dirname(script_path)
+parent_directory = os.path.dirname(script_directory)
+os.chdir(parent_directory)
+
+load_dotenv()
 
 
 def get_entries():
     dynamodb = boto3.client("dynamodb")
-    table_name = "okgp_registration_prod"
+    table_name = os.getenv("DB_TABLE")
     print(f"Getting entries from {table_name}")
     items = dynamodb.scan(
         TableName=table_name,
@@ -62,43 +70,44 @@ def divide_age_groups(entries):
 def main():
     age_groups = ['dragon', 'tiger', 'youth', 'cadet', 'junior', 'senior', 'ultra']
     entries = get_entries()
-    sparring = [entry for entry in entries if 'sparring' in entry['events']['S'].split(',')]
-    gr_sparring = [entry for entry in entries if 'sparring-gr' in entry['events']['S'].split(',')]
-    wc_sparring = [entry for entry in entries if 'sparring-wc' in entry['events']['S'].split(',')]
-    sparring_groups = divide_age_groups(sparring)
-    gr_sparring_groups = divide_age_groups(gr_sparring)
-    wc_sparring_groups = divide_age_groups(wc_sparring)
+    poomsae = [entry for entry in entries if 'poomsae' in entry['events']['S'].split(',')]
+    world_class_poomsae = [entry for entry in entries if 'world-class poomsae' in entry['events']['S'].split(',')]
+    pair_poomsae = [entry for entry in entries if 'pair poomsae' in entry['events']['S'].split(',')]
+    poomsae_groups = divide_age_groups(poomsae)
+    world_class_poomsae_groups = divide_age_groups(world_class_poomsae)
+    pair_poomsae_groups = divide_age_groups(pair_poomsae)
 
-    print(f"World Class (Total: {len(wc_sparring)})")
+    print(f"World Class (Total: {len(world_class_poomsae)})")
     for ag in age_groups:
-        female = [entry for entry in wc_sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in wc_sparring_groups[ag] if entry['gender']['S'] == 'male']
+        female = [entry for entry in world_class_poomsae_groups[ag] if entry['gender']['S'] == 'female']
+        male = [entry for entry in world_class_poomsae_groups[ag] if entry['gender']['S'] == 'male']
         print(f"  {ag.capitalize()}")
         print(f"    Female: {len(female)}")
         print(f"      Male: {len(male)}")
         print()
 
-    print(f"Grass Roots (Total: {len(gr_sparring)})")
+    print(f"Individual Poomsae (Total: {len(poomsae)})")
     for ag in age_groups:
-        female = [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'male']
-        print(f"  {ag.capitalize()}")
-        print(f"    Female: {len(female)}")
-        print(f"      Male: {len(male)}")
-        print()
-    print(f"Color Belts (Total: {len(sparring)})")
-    for ag in age_groups:
-        female = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'male']
+        female = [entry for entry in poomsae_groups[ag] if entry['gender']['S'] == 'female']
+        male = [entry for entry in poomsae_groups[ag] if entry['gender']['S'] == 'male']
         print(f"  {ag.capitalize()}")
         print(f"    Female: {len(female)}")
         print(f"      Male: {len(male)}")
         print()
 
-    print(f"Color Belts + Grass Roots (Total: {len(sparring) + len(gr_sparring)})")
+    print(f"Pair Poomsae (Total: {len(pair_poomsae)})")
     for ag in age_groups:
-        female = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'female'] + [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'male'] + [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'male']
+        female = [entry for entry in pair_poomsae_groups[ag] if entry['gender']['S'] == 'female']
+        male = [entry for entry in pair_poomsae_groups[ag] if entry['gender']['S'] == 'male']
+        print(f"  {ag.capitalize()}")
+        print(f"    Female: {len(female)}")
+        print(f"      Male: {len(male)}")
+        print()
+
+    print(f"Team Poomsae (Total: {len(team_poomsae)})")
+    for ag in age_groups:
+        female = [entry for entry in team_poomsae_groups[ag] if entry['gender']['S'] == 'female']
+        male = [entry for entry in team_poomsae_groups[ag] if entry['gender']['S'] == 'male']
         print(f"  {ag.capitalize()}")
         print(f"    Female: {len(female)}")
         print(f"      Male: {len(male)}")
