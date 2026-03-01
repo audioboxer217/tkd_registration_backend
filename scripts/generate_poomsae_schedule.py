@@ -10,8 +10,6 @@ script_directory = os.path.dirname(script_path)
 parent_directory = os.path.dirname(script_directory)
 os.chdir(parent_directory)
 
-load_dotenv()
-
 
 def get_entries():
     dynamodb = boto3.client("dynamodb")
@@ -68,6 +66,7 @@ def divide_age_groups(entries):
 
 
 def main():
+    load_dotenv()
     age_groups = ['dragon', 'tiger', 'youth', 'cadet', 'junior', 'senior', 'ultra']
     entries = get_entries()
     poomsae = [entry for entry in entries if 'poomsae' in entry['events']['S'].split(',')]
