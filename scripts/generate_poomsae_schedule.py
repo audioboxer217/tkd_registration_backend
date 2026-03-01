@@ -73,9 +73,11 @@ def main():
     poomsae = [entry for entry in entries if 'poomsae' in entry['events']['S'].split(',')]
     world_class_poomsae = [entry for entry in entries if 'world-class poomsae' in entry['events']['S'].split(',')]
     pair_poomsae = [entry for entry in entries if 'pair poomsae' in entry['events']['S'].split(',')]
+    team_poomsae = [entry for entry in entries if 'team poomsae' in entry['events']['S'].split(',')]
     poomsae_groups = divide_age_groups(poomsae)
     world_class_poomsae_groups = divide_age_groups(world_class_poomsae)
     pair_poomsae_groups = divide_age_groups(pair_poomsae)
+    team_poomsae_groups = divide_age_groups(team_poomsae)
 
     print(f"World Class (Total: {len(world_class_poomsae)})")
     for ag in age_groups:
