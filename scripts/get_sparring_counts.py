@@ -47,8 +47,16 @@ def get_age_group(entry):
         "ultra": list(range(33, 100)),
     }
 
-    age_group = next((group for group, ages in age_groups.items() if int(entry["age"]["N"]) in ages))
+    try:
+        age = int(entry["age"]["N"])
+    except (KeyError, TypeError, ValueError):
+        # Invalid or missing age; signal no age group
+        return None
 
+    age_group = next(
+        (group for group, ages in age_groups.items() if age in ages),
+        None,
+    )
     return age_group
 
 
