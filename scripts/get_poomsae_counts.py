@@ -15,15 +15,26 @@ def get_entries():
     dynamodb = boto3.client("dynamodb")
     table_name = os.getenv("DB_TABLE")
     print(f"Getting entries from {table_name}")
-    items = dynamodb.scan(
-        TableName=table_name,
-        FilterExpression="reg_type = :competitor",
-        ExpressionAttributeValues={
+    items = []
+    scan_kwargs = {
+        "TableName": table_name,
+        "FilterExpression": "reg_type = :competitor",
+        "ExpressionAttributeValues": {
             ":competitor": {
                 "S": "competitor",
             },
         },
-    )["Items"]
+    }
+
+    while True:
+        response = dynamodb.scan(**scan_kwargs)
+        items.extend(response.get("Items", []))
+
+        last_evaluated_key = response.get("LastEvaluatedKey")
+        if not last_evaluated_key:
+            break
+
+        scan_kwargs["ExclusiveStartKey"] = last_evaluated_key
     return items
 
 
