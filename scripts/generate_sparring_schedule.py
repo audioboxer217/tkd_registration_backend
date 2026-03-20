@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
-# import io
+import argparse
+import csv
+import json
+import math
 import os
+from dataclasses import dataclass, field
+
 import boto3
 from dotenv import load_dotenv
 
@@ -10,108 +15,501 @@ script_directory = os.path.dirname(script_path)
 parent_directory = os.path.dirname(script_directory)
 os.chdir(parent_directory)
 
-load_dotenv()
+AGE_GROUP_ORDER = ["dragon", "tiger", "youth", "cadet", "junior", "senior", "ultra"]
+AGE_GROUPS = {
+    "dragon": [4, 5, 6, 7],
+    "tiger": [8, 9],
+    "youth": [10, 11],
+    "cadet": [12, 13, 14],
+    "junior": [15, 16],
+    "senior": list(range(17, 33)),
+    "ultra": list(range(33, 100)),
+}
+
+
+@dataclass
+class Competitor:
+    name: str
+    school: str
+    gender: str
+    age: int
+    weight: float
+    division: str
+    age_group: str
+    original_age_group: str
+    raw: dict
+
+
+@dataclass
+class Group:
+    division: str
+    gender: str
+    age_group: str
+    members: list[Competitor] = field(default_factory=list)
 
 
 def get_entries():
     dynamodb = boto3.client("dynamodb")
     table_name = os.getenv("DB_TABLE")
     print(f"Getting entries from {table_name}")
-    items = dynamodb.scan(
-        TableName=table_name,
-        FilterExpression="reg_type = :competitor",
-        ExpressionAttributeValues={
-            ":competitor": {
-                "S": "competitor",
+
+    items = []
+    last_evaluated_key = None
+    while True:
+        kwargs = {
+            "TableName": table_name,
+            "FilterExpression": "reg_type = :competitor",
+            "ExpressionAttributeValues": {
+                ":competitor": {
+                    "S": "competitor",
+                },
             },
-        },
-    )["Items"]
+        }
+        if last_evaluated_key:
+            kwargs["ExclusiveStartKey"] = last_evaluated_key
+
+        response = dynamodb.scan(**kwargs)
+        items.extend(response.get("Items", []))
+        last_evaluated_key = response.get("LastEvaluatedKey")
+        if not last_evaluated_key:
+            break
+
     return items
 
 
-def get_age_group(entry):
-    age_groups = {
-        "dragon": [4, 5, 6, 7],
-        "tiger": [8, 9],
-        "youth": [10, 11],
-        "cadet": [12, 13, 14],
-        "junior": [15, 16],
-        "senior": list(range(17, 33)),
-        "ultra": list(range(33, 100)),
+def get_age_group(age: int) -> str:
+    return next((group for group, ages in AGE_GROUPS.items() if age in ages), "ultra")
+
+
+def age_group_move_direction(original: str, current: str) -> str:
+    orig_idx = AGE_GROUP_ORDER.index(original)
+    curr_idx = AGE_GROUP_ORDER.index(current)
+    if curr_idx > orig_idx:
+        return "up"
+    if curr_idx < orig_idx:
+        return "down"
+    return ""
+
+
+def normalize_gender(gender: str) -> str:
+    gender = (gender or "").strip().lower()
+    if gender.startswith("m"):
+        return "male"
+    if gender.startswith("f"):
+        return "female"
+    return "unknown"
+
+
+def parse_divisions(events: str) -> list[str]:
+    event_list = [event.strip() for event in events.split(",") if event.strip()]
+    divisions = []
+    if "sparring-wc" in event_list:
+        divisions.append("world_class")
+    if "sparring" in event_list:
+        divisions.append("color_belt")
+    if "sparring-gr" in event_list:
+        divisions.append("grass_roots")
+    return divisions
+
+
+def parse_competitors(entries: list[dict]) -> list[Competitor]:
+    competitors = []
+    for entry in entries:
+        divisions = parse_divisions(entry.get("events", {}).get("S", ""))
+        if not divisions:
+            continue
+
+        age = int(entry.get("age", {}).get("N", 0))
+        weight = float(entry.get("weight", {}).get("N", 0))
+        gender = normalize_gender(entry.get("gender", {}).get("S", "unknown"))
+        school = entry.get("school", {}).get("S", "Unknown School")
+        name = entry.get("full_name", {}).get("S", "Unknown Competitor")
+        age_group = get_age_group(age)
+
+        for division in divisions:
+            competitors.append(
+                Competitor(
+                    name=name,
+                    school=school,
+                    gender=gender,
+                    age=age,
+                    weight=weight,
+                    division=division,
+                    age_group=age_group,
+                    original_age_group=age_group,
+                    raw=entry,
+                )
+            )
+
+    return competitors
+
+
+def build_age_buckets(competitors: list[Competitor]) -> dict[str, list[Competitor]]:
+    buckets = {age_group: [] for age_group in AGE_GROUP_ORDER}
+    for competitor in competitors:
+        buckets[competitor.age_group].append(competitor)
+    return buckets
+
+
+def can_form_valid_groups(count: int) -> bool:
+    if count == 0:
+        return True
+    size_plan = group_size_plan(count)
+    return bool(size_plan) and min(size_plan) >= 2
+
+
+def choose_singleton_target(
+    buckets: dict[str, list[Competitor]],
+    source_index: int,
+) -> str | None:
+    source_age_group = AGE_GROUP_ORDER[source_index]
+    source_count = len(buckets[source_age_group])
+    if source_count != 1:
+        return None
+
+    candidate_indices = []
+    if source_index - 1 >= 0:
+        candidate_indices.append(source_index - 1)
+    if source_index + 1 < len(AGE_GROUP_ORDER):
+        candidate_indices.append(source_index + 1)
+
+    candidates = []
+    for candidate_index in candidate_indices:
+        candidate_age_group = AGE_GROUP_ORDER[candidate_index]
+        candidate_count = len(buckets[candidate_age_group])
+
+        # Moving into an empty bracket creates a new singleton and doesn't help.
+        if candidate_count == 0:
+            continue
+
+        before_invalid = int(not can_form_valid_groups(source_count)) + int(not can_form_valid_groups(candidate_count))
+        after_invalid = int(not can_form_valid_groups(0)) + int(not can_form_valid_groups(candidate_count + 1))
+
+        # Only move if this improves local grouping viability.
+        if after_invalid >= before_invalid:
+            continue
+
+        candidates.append(
+            (
+                abs((candidate_count + 1) - 3),
+                0 if candidate_index > source_index else 1,
+                candidate_age_group,
+            )
+        )
+
+    if not candidates:
+        return None
+
+    _, _, target_age_group = min(candidates)
+    return target_age_group
+
+
+def rebalance_singletons_adjacent(buckets: dict[str, list[Competitor]]) -> dict[str, list[Competitor]]:
+    # Re-check repeatedly because moving one competitor can enable another valid move.
+    changed = True
+    while changed:
+        changed = False
+        for index, age_group in enumerate(AGE_GROUP_ORDER):
+            if len(buckets[age_group]) != 1:
+                continue
+
+            target_age_group = choose_singleton_target(buckets, index)
+            if not target_age_group:
+                continue
+
+            competitor = buckets[age_group].pop()
+            competitor.age_group = target_age_group
+            buckets[target_age_group].append(competitor)
+            changed = True
+
+    return buckets
+
+
+def group_size_plan(count: int) -> list[int]:
+    if count <= 0:
+        return []
+    if count <= 4:
+        return [count]
+
+    groups = math.ceil(count / 4)
+    sizes = [count // groups] * groups
+
+    for index in range(count % groups):
+        sizes[index] += 1
+
+    return sizes
+
+
+def split_by_weight_and_school(entries: list[Competitor]) -> list[list[Competitor]]:
+    entries = sorted(entries, key=lambda competitor: competitor.weight)
+    size_plan = group_size_plan(len(entries))
+
+    if not size_plan:
+        return []
+
+    groups = [[] for _ in size_plan]
+    max_sizes = list(size_plan)
+
+    for competitor in entries:
+        candidates = [index for index, group in enumerate(groups) if len(group) < max_sizes[index]]
+        best_index = min(
+            candidates,
+            key=lambda index: (
+                sum(1 for member in groups[index] if member.school == competitor.school),
+                len(groups[index]),
+            ),
+        )
+        groups[best_index].append(competitor)
+
+    return groups
+
+
+def should_combine_color_and_grass(color_entries: list[Competitor], grass_entries: list[Competitor]) -> bool:
+    # Only use the combined division label when both divisions have competitors
+    # and at least one side is too small to stand alone.
+    if not color_entries or not grass_entries:
+        return False
+    if len(color_entries) < 2 or len(grass_entries) < 2:
+        return True
+    return False
+
+
+def generate_division_gender_age_groups(
+    division_name: str,
+    gender: str,
+    buckets: dict[str, list[Competitor]],
+) -> list[Group]:
+    groups = []
+    for age_group in AGE_GROUP_ORDER:
+        entries = buckets[age_group]
+        if not entries:
+            continue
+
+        split_groups = split_by_weight_and_school(entries)
+        for members in split_groups:
+            groups.append(
+                Group(
+                    division=division_name,
+                    gender=gender,
+                    age_group=age_group,
+                    members=members,
+                )
+            )
+    return groups
+
+
+def generate_groups(competitors: list[Competitor]) -> list[Group]:
+    groups = []
+
+    for gender in ["female", "male", "unknown"]:
+        world_entries = [
+            competitor
+            for competitor in competitors
+            if competitor.division == "world_class" and competitor.gender == gender
+        ]
+        world_buckets = rebalance_singletons_adjacent(build_age_buckets(world_entries))
+        groups.extend(generate_division_gender_age_groups("world_class", gender, world_buckets))
+
+        color_entries = [
+            competitor
+            for competitor in competitors
+            if competitor.division == "color_belt" and competitor.gender == gender
+        ]
+        grass_entries = [
+            competitor
+            for competitor in competitors
+            if competitor.division == "grass_roots" and competitor.gender == gender
+        ]
+
+        color_buckets = rebalance_singletons_adjacent(build_age_buckets(color_entries))
+        grass_buckets = rebalance_singletons_adjacent(build_age_buckets(grass_entries))
+
+        for age_group in AGE_GROUP_ORDER:
+            age_color = color_buckets[age_group]
+            age_grass = grass_buckets[age_group]
+
+            if should_combine_color_and_grass(age_color, age_grass):
+                combined = age_color + age_grass
+                split_groups = split_by_weight_and_school(combined)
+                for members in split_groups:
+                    groups.append(
+                        Group(
+                            division="color_belt+grass_roots",
+                            gender=gender,
+                            age_group=age_group,
+                            members=members,
+                        )
+                    )
+            else:
+                for members in split_by_weight_and_school(age_color):
+                    groups.append(
+                        Group(
+                            division="color_belt",
+                            gender=gender,
+                            age_group=age_group,
+                            members=members,
+                        )
+                    )
+                for members in split_by_weight_and_school(age_grass):
+                    groups.append(
+                        Group(
+                            division="grass_roots",
+                            gender=gender,
+                            age_group=age_group,
+                            members=members,
+                        )
+                    )
+
+    return groups
+
+
+def print_groups(groups: list[Group]) -> None:
+    order = {
+        "world_class": 0,
+        "color_belt": 1,
+        "grass_roots": 2,
+        "color_belt+grass_roots": 3,
     }
 
-    age_group = next((group for group, ages in age_groups.items() if int(entry["age"]["N"]) in ages))
+    gender_order = {"female": 0, "male": 1, "unknown": 2}
 
-    return age_group
+    groups = sorted(
+        groups,
+        key=lambda group: (
+            order.get(group.division, 99),
+            gender_order.get(group.gender, 99),
+            AGE_GROUP_ORDER.index(group.age_group),
+            len(group.members),
+        ),
+    )
+
+    if not groups:
+        print("No sparring competitors found.")
+        return
+
+    print("Sparring Groups (target size: 2-4 competitors)")
+    print("=" * 80)
+
+    for index, group in enumerate(groups, start=1):
+        print(
+            f"Group {index:02d} | division={group.division} | gender={group.gender} | "
+            f"age={group.age_group} | size={len(group.members)}"
+        )
+
+        for member in sorted(group.members, key=lambda competitor: competitor.weight):
+            moved_tag = ""
+            if member.original_age_group != member.age_group:
+                moved_tag = f" (moved from {member.original_age_group})"
+            print(
+                f"  - {member.name} | {member.school} | age={member.age} | "
+                f"weight={member.weight:.1f}{moved_tag}"
+            )
+
+        if len(group.members) < 2:
+            print("  ! Needs manual merge (single competitor group)")
+
+        schools = [member.school for member in group.members]
+        duplicates = {school for school in schools if schools.count(school) > 1}
+        if duplicates:
+            print(f"  ! Same-school matchup present: {', '.join(sorted(duplicates))}")
+
+        print()
 
 
-def divide_age_groups(entries):
-    dragon = [entry for entry in entries if get_age_group(entry) == 'dragon']
-    tiger = [entry for entry in entries if get_age_group(entry) == 'tiger']
-    youth = [entry for entry in entries if get_age_group(entry) == 'youth']
-    cadet = [entry for entry in entries if get_age_group(entry) == 'cadet']
-    junior = [entry for entry in entries if get_age_group(entry) == 'junior']
-    senior = [entry for entry in entries if get_age_group(entry) == 'senior']
-    ultra = [entry for entry in entries if get_age_group(entry) == 'ultra']
-    
-    return {
-        'dragon': dragon,
-        'tiger': tiger,
-        'youth': youth,
-        'cadet': cadet,
-        'junior': junior,
-        'senior': senior,
-        'ultra': ultra
-    }
+def groups_to_rows(groups: list[Group]) -> list[dict]:
+    rows = []
+    for group_index, group in enumerate(groups, start=1):
+        for competitor in sorted(group.members, key=lambda member: member.weight):
+            rows.append(
+                {
+                    "group_number": group_index,
+                    "division": group.division,
+                    "gender": group.gender,
+                    "age_group": group.age_group,
+                    "group_size": len(group.members),
+                    "competitor_name": competitor.name,
+                    "school": competitor.school,
+                    "age": competitor.age,
+                    "weight": competitor.weight,
+                    "original_age_group": competitor.original_age_group,
+                    "age_group_move_direction": age_group_move_direction(competitor.original_age_group, competitor.age_group),
+                }
+            )
+    return rows
 
 
+def write_csv(groups: list[Group], output_path: str) -> None:
+    rows = groups_to_rows(groups)
+    fieldnames = [
+        "group_number",
+        "division",
+        "gender",
+        "age_group",
+        "group_size",
+        "competitor_name",
+        "school",
+        "age",
+        "weight",
+        "original_age_group",
+        "age_group_move_direction",
+    ]
+
+    with open(output_path, "w", newline="", encoding="utf-8") as file_handle:
+        writer = csv.DictWriter(file_handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def write_json(groups: list[Group], output_path: str) -> None:
+    rows = groups_to_rows(groups)
+    with open(output_path, "w", encoding="utf-8") as file_handle:
+        json.dump(rows, file_handle, indent=2)
+
+
+def export_groups(groups: list[Group], output_format: str, output_dir: str = "output") -> list[str]:
+    os.makedirs(output_dir, exist_ok=True)
+    written_files = []
+
+    if output_format in {"csv", "both"}:
+        csv_path = os.path.join(output_dir, "sparring_groups.csv")
+        write_csv(groups, csv_path)
+        written_files.append(csv_path)
+
+    if output_format in {"json", "both"}:
+        json_path = os.path.join(output_dir, "sparring_groups.json")
+        write_json(groups, json_path)
+        written_files.append(json_path)
+
+    return written_files
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate 2-4 person sparring groups.")
+    parser.add_argument(
+        "--output-format",
+        choices=["csv", "json", "both"],
+        default="csv",
+        help="Output format for saved group data. Defaults to csv.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="output",
+        help="Directory for generated schedule files. Defaults to output/.",
+    )
+    return parser.parse_args()
 
 
 def main():
-    age_groups = ['dragon', 'tiger', 'youth', 'cadet', 'junior', 'senior', 'ultra']
+    args = parse_args()
+    load_dotenv()
     entries = get_entries()
-    sparring = [entry for entry in entries if 'sparring' in entry['events']['S'].split(',')]
-    gr_sparring = [entry for entry in entries if 'sparring-gr' in entry['events']['S'].split(',')]
-    wc_sparring = [entry for entry in entries if 'sparring-wc' in entry['events']['S'].split(',')]
-    sparring_groups = divide_age_groups(sparring)
-    gr_sparring_groups = divide_age_groups(gr_sparring)
-    wc_sparring_groups = divide_age_groups(wc_sparring)
-
-    print(f"World Class (Total: {len(wc_sparring)})")
-    for ag in age_groups:
-        female = [entry for entry in wc_sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in wc_sparring_groups[ag] if entry['gender']['S'] == 'male']
-        print(f"  {ag.capitalize()}")
-        print(f"    Female: {len(female)}")
-        print(f"      Male: {len(male)}")
-        print()
-
-    print(f"Grass Roots (Total: {len(gr_sparring)})")
-    for ag in age_groups:
-        female = [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'male']
-        print(f"  {ag.capitalize()}")
-        print(f"    Female: {len(female)}")
-        print(f"      Male: {len(male)}")
-        print()
-
-    print(f"Color Belts (Total: {len(sparring)})")
-    for ag in age_groups:
-        female = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'male']
-        print(f"  {ag.capitalize()}")
-        print(f"    Female: {len(female)}")
-        print(f"      Male: {len(male)}")
-        print()
-
-    print(f"Color Belts + Grass Roots (Total: {len(sparring) + len(gr_sparring)})")
-    for ag in age_groups:
-        female = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'female'] + [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'female']
-        male = [entry for entry in sparring_groups[ag] if entry['gender']['S'] == 'male'] + [entry for entry in gr_sparring_groups[ag] if entry['gender']['S'] == 'male']
-        print(f"  {ag.capitalize()}")
-        print(f"    Female: {len(female)}")
-        print(f"      Male: {len(male)}")
-        print()
+    competitors = parse_competitors(entries)
+    groups = generate_groups(competitors)
+    print_groups(groups)
+    written_files = export_groups(groups, args.output_format, args.output_dir)
+    print("Saved group data to:")
+    for file_path in written_files:
+        print(f"  - {file_path}")
 
 
 if __name__ == "__main__":

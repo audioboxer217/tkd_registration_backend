@@ -950,8 +950,10 @@ dev = [
     { name = "pillow" },
     { name = "pytest" },
     { name = "python-dotenv" },
-    { name = "ruff" },
     { name = "setuptools" },
+]
+lint = [
+    { name = "ruff" },
 ]
 
 [package.metadata]
@@ -972,9 +974,9 @@ dev = [
     { name = "pillow", specifier = "==10.4.0" },
     { name = "pytest", specifier = "~=8.0.0" },
     { name = "python-dotenv", specifier = "~=1.0" },
-    { name = "ruff", specifier = "~=0.6.5" },
     { name = "setuptools", specifier = "==74.1.2" },
 ]
+lint = [{ name = "ruff", specifier = "~=0.6.5" }]
 
 [[package]]
 name = "toml"

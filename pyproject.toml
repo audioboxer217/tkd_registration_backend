@@ -14,13 +14,15 @@ dependencies = [
     "zipp>=3.19.1",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "gspread~=6.1",
     "oauth2client~=4.1",
     "pillow==10.4.0",
     "pytest~=8.0.0",
     "python-dotenv~=1.0",
-    "ruff~=0.6.5",
     "setuptools==74.1.2",
+]
+lint = [
+    "ruff~=0.6.5",
 ]
