@@ -84,6 +84,16 @@ def get_age_group(age: int) -> str:
     return next((group for group, ages in AGE_GROUPS.items() if age in ages), "ultra")
 
 
+def age_group_move_direction(original: str, current: str) -> str:
+    orig_idx = AGE_GROUP_ORDER.index(original)
+    curr_idx = AGE_GROUP_ORDER.index(current)
+    if curr_idx > orig_idx:
+        return "up"
+    if curr_idx < orig_idx:
+        return "down"
+    return ""
+
+
 def normalize_gender(gender: str) -> str:
     cleaned = (gender or "").strip().lower()
     if cleaned.startswith("m"):
@@ -396,7 +406,7 @@ def grouped_rows(groups: list[Group], division_label: str) -> list[dict]:
                     "age": competitor.age,
                     "age_group": competitor.age_group,
                     "original_age_group": competitor.original_age_group,
-                    "moved_up_age_group": competitor.original_age_group != competitor.age_group,
+                    "age_group_move_direction": age_group_move_direction(competitor.original_age_group, competitor.age_group),
                     "belt": competitor.belt,
                 }
             )
@@ -418,7 +428,7 @@ def list_rows(competitors: list[Competitor], division_label: str) -> list[dict]:
                 "age": competitor.age,
                 "age_group": competitor.age_group,
                 "original_age_group": competitor.original_age_group,
-                "moved_up_age_group": competitor.original_age_group != competitor.age_group,
+                "age_group_move_direction": age_group_move_direction(competitor.original_age_group, competitor.age_group),
                 "belt": competitor.belt,
                 "list_position": index,
             }
@@ -455,7 +465,7 @@ def write_csv(rows: list[dict], output_path: str) -> None:
         "age",
         "age_group",
         "original_age_group",
-        "moved_up_age_group",
+        "age_group_move_direction",
         "belt",
     ]
 
