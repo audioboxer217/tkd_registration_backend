@@ -380,6 +380,14 @@ def print_counted_list(title: str, competitors: list[Competitor]) -> None:
     print()
 
 
+def _age_group_move_direction(competitor: Competitor) -> str | None:
+    if competitor.original_age_group == competitor.age_group:
+        return None
+    original_index = AGE_GROUP_ORDER.index(competitor.original_age_group)
+    current_index = AGE_GROUP_ORDER.index(competitor.age_group)
+    return "up" if current_index > original_index else "down"
+
+
 def grouped_rows(groups: list[Group], division_label: str) -> list[dict]:
     rows = []
     for group_index, group in enumerate(groups, start=1):
@@ -396,7 +404,7 @@ def grouped_rows(groups: list[Group], division_label: str) -> list[dict]:
                     "age": competitor.age,
                     "age_group": competitor.age_group,
                     "original_age_group": competitor.original_age_group,
-                    "moved_up_age_group": competitor.original_age_group != competitor.age_group,
+                    "age_group_move_direction": _age_group_move_direction(competitor),
                     "belt": competitor.belt,
                 }
             )
@@ -418,7 +426,7 @@ def list_rows(competitors: list[Competitor], division_label: str) -> list[dict]:
                 "age": competitor.age,
                 "age_group": competitor.age_group,
                 "original_age_group": competitor.original_age_group,
-                "moved_up_age_group": competitor.original_age_group != competitor.age_group,
+                "age_group_move_direction": _age_group_move_direction(competitor),
                 "belt": competitor.belt,
                 "list_position": index,
             }
@@ -455,7 +463,7 @@ def write_csv(rows: list[dict], output_path: str) -> None:
         "age",
         "age_group",
         "original_age_group",
-        "moved_up_age_group",
+        "age_group_move_direction",
         "belt",
     ]
 
