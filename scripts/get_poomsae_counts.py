@@ -49,8 +49,21 @@ def get_age_group(entry):
         "ultra": list(range(33, 100)),
     }
 
-    age_group = next((group for group, ages in age_groups.items() if int(entry["age"]["N"]) in ages))
+    # Safely parse the age field; if it's missing or invalid, skip this entry.
+    try:
+        age_value = int(entry.get("age", {}).get("N"))
+    except (TypeError, ValueError, AttributeError):
+        print(f"Skipping entry with invalid or missing age: {entry}")
+        return None
 
+    # Use a default with next() so that out-of-range ages don't raise StopIteration.
+    age_group = next(
+        (group for group, ages in age_groups.items() if age_value in ages),
+        None,
+    )
+
+    if age_group is None:
+        print(f"Skipping entry with out-of-range age {age_value}: {entry}")
     return age_group
 
 
