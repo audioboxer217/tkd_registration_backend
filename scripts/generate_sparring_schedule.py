@@ -81,6 +81,16 @@ def get_age_group(age: int) -> str:
     return next((group for group, ages in AGE_GROUPS.items() if age in ages), "ultra")
 
 
+def age_group_move_direction(original: str, current: str) -> str:
+    orig_idx = AGE_GROUP_ORDER.index(original)
+    curr_idx = AGE_GROUP_ORDER.index(current)
+    if curr_idx > orig_idx:
+        return "up"
+    if curr_idx < orig_idx:
+        return "down"
+    return ""
+
+
 def normalize_gender(gender: str) -> str:
     gender = (gender or "").strip().lower()
     if gender.startswith("m"):
@@ -418,7 +428,7 @@ def groups_to_rows(groups: list[Group]) -> list[dict]:
                     "age": competitor.age,
                     "weight": competitor.weight,
                     "original_age_group": competitor.original_age_group,
-                    "moved_up_age_group": competitor.original_age_group != competitor.age_group,
+                    "age_group_move_direction": age_group_move_direction(competitor.original_age_group, competitor.age_group),
                 }
             )
     return rows
@@ -437,7 +447,7 @@ def write_csv(groups: list[Group], output_path: str) -> None:
         "age",
         "weight",
         "original_age_group",
-        "moved_up_age_group",
+        "age_group_move_direction",
     ]
 
     with open(output_path, "w", newline="", encoding="utf-8") as file_handle:
