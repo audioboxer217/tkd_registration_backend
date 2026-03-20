@@ -291,7 +291,7 @@ def generate_division_gender_age_groups(
 def generate_groups(competitors: list[Competitor]) -> list[Group]:
     groups = []
 
-    for gender in ["female", "male"]:
+    for gender in ["female", "male", "unknown"]:
         world_entries = [
             competitor
             for competitor in competitors
@@ -361,11 +361,13 @@ def print_groups(groups: list[Group]) -> None:
         "color_belt+grass_roots": 3,
     }
 
+    gender_order = {"female": 0, "male": 1, "unknown": 2}
+
     groups = sorted(
         groups,
         key=lambda group: (
             order.get(group.division, 99),
-            0 if group.gender == "female" else 1,
+            gender_order.get(group.gender, 99),
             AGE_GROUP_ORDER.index(group.age_group),
             len(group.members),
         ),
