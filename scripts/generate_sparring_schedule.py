@@ -255,8 +255,10 @@ def split_by_weight_and_school(entries: list[Competitor]) -> list[list[Competito
 
 
 def should_combine_color_and_grass(color_entries: list[Competitor], grass_entries: list[Competitor]) -> bool:
+    # Only use the combined division label when both divisions have competitors
+    # and at least one side is too small to stand alone.
     if not color_entries or not grass_entries:
-        return True
+        return False
     if len(color_entries) < 2 or len(grass_entries) < 2:
         return True
     return False
