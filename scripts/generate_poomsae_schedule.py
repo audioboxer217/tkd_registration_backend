@@ -507,8 +507,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="output",
-        help="Directory for generated schedule files. Defaults to output/.",
+        default="output/schedules",
+        help="Directory for generated schedule files. Defaults to output/schedules/.",
     )
     return parser.parse_args()
 
