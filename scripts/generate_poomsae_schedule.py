@@ -485,12 +485,12 @@ def export_report(rows: list[dict], output_format: str, output_dir: str) -> list
     written_files = []
 
     if output_format in {"csv", "both"}:
-        csv_path = os.path.join(output_dir, "poomsae_schedule_v2.csv")
+        csv_path = os.path.join(output_dir, "poomsae_groups.csv")
         write_csv(rows, csv_path)
         written_files.append(csv_path)
 
     if output_format in {"json", "both"}:
-        json_path = os.path.join(output_dir, "poomsae_schedule_v2.json")
+        json_path = os.path.join(output_dir, "poomsae_groups.json")
         write_json(rows, json_path)
         written_files.append(json_path)
 
