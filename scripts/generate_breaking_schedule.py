@@ -342,7 +342,7 @@ def write_json(groups: list[Group], output_path: str) -> None:
         json.dump(rows, file_handle, indent=2)
 
 
-def export_groups(groups: list[Group], output_format: str, output_dir: str = "output") -> list[str]:
+def export_groups(groups: list[Group], output_format: str, output_dir: str = "output/schedules") -> list[str]:
     os.makedirs(output_dir, exist_ok=True)
     written_files = []
 
