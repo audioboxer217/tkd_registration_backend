@@ -3,6 +3,7 @@
 # import io
 import os
 import boto3
+import argparse
 from PIL import Image, ImageDraw, ImageFont
 from dotenv import load_dotenv
 
@@ -45,7 +46,7 @@ def get_age_group(age):
     return age_group
 
 
-def generate_badge(data):
+def generate_badge(data, output_dir):
     """Generate an ID Badge using DB Data"""
 
     # Opening the template image as the main badge
@@ -131,7 +132,7 @@ def generate_badge(data):
         badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
 
         # Save the image for email attachment
-        badge.save(f"output/{badge_filename}")
+        badge.save(f"{output_dir}/{badge_filename}")
 
         ret_msg = f"Badge '{badge_filename}' generated"
 
@@ -143,17 +144,30 @@ def generate_badge(data):
     return ret_msg
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate badges for competitors.")
+    parser.add_argument(
+        "--output-dir",
+        default="output/badges",
+        help="Directory for generated badge files. Defaults to output/badges/.",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     load_dotenv()
     entries = get_entries()
     # entries = [
     #     {'poomsae_form': {'S': ''}, 'coach': {'S': 'Master Jung'}, 'pair_poomsae_form': {'S': ''}, 'team_poomsae_form': {'S': ''}, 'full_name': {'S': 'Josiah Salazar'}, 'email': {'S': 'requiredcrio_ministries@hotmail.com'}, 'gender': {'S': 'male'}, 'weight': {'N': '60'}, 'reg_type': {'S': 'competitor'}, 'school': {'S': "Tiger Jung's TKD"}, 'birthdate': {'S': '2016-07-06'}, 'events': {'S': 'breaking,poomsae,world-class poomsae,sparring-wc,little_tiger,family poomsae,team poomsae,sparring-gr'}, 'height': {'N': '48'}, 'payment': {'S': 'pi_3S1E1hGXHNyjORpV1X0hUD3r'}, 'beltRank': {'S': 'yellow'}, 'parent': {'S': 'Rebekah Salazar'}, 'medical_form': {'M': {...}}, 'pk': {'S': "Tiger_Jung's_TKD-competitor-Josiah_Salazar"}, 'phone': {'S': '918-658-5576'}, 'age': {'N': '9'}, 'family_poomsae_form': {'S': ''}}
     # ]
 
+    os.makedirs(args.output_dir, exist_ok=True)
+
     for entry in entries:
         print(f"Generating badge for {entry['full_name']['S']}")
 
-        generate_badge(entry)
+        generate_badge(entry, args.output_dir)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 # import io
 import os
 import boto3
+import argparse
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from dotenv import load_dotenv
 
@@ -27,7 +28,7 @@ def get_entries():
     return items
 
 
-def generate_badge(data):
+def generate_badge(data, output_dir):
     """Generate an ID Badge using DB Data"""
 
     # S3 Client
@@ -113,7 +114,7 @@ def generate_badge(data):
         badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
 
         # Save the image for email attachment
-        badge.save(f"output/{badge_filename}")
+        badge.save(f"{output_dir}/{badge_filename}")
 
         # Save the image to an in-memory file for S3 Upload
         # badge_file = io.BytesIO()
@@ -133,13 +134,26 @@ def generate_badge(data):
     return ret_msg
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate badges for competitors.")
+    parser.add_argument(
+        "--output-dir",
+        default="output/badges",
+        help="Directory for generated badge files. Defaults to output/badges/.",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     load_dotenv()
     entries = get_entries()
 
+    os.makedirs(args.output_dir, exist_ok=True)
+
     for entry in entries:
         print(f"Generating badge for {entry['full_name']['S']}")
-        generate_badge(entry)
+        generate_badge(entry, args.output_dir)
 
 
 if __name__ == "__main__":
