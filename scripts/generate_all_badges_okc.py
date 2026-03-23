@@ -132,7 +132,7 @@ def generate_badge(data, output_dir):
         badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
 
         # Save the image for email attachment
-        badge.save(f"{output_dir}/{badge_filename}")
+        badge.save(os.path.join(output_dir, badge_filename))
 
         ret_msg = f"Badge '{badge_filename}' generated"
 
