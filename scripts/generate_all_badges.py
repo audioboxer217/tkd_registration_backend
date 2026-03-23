@@ -114,7 +114,8 @@ def generate_badge(data, output_dir):
         badge_filename = f"{data['pk']['S']}_badge.jpg".replace(" ", "_")
 
         # Save the image for email attachment
-        badge.save(f"{output_dir}/{badge_filename}")
+        badge_path = os.path.join(output_dir, badge_filename)
+        badge.save(badge_path)
 
         # Save the image to an in-memory file for S3 Upload
         # badge_file = io.BytesIO()
