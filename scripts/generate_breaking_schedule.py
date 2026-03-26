@@ -26,7 +26,7 @@ AGE_GROUPS = {
     "ultra": list(range(33, 100)),
 }
 
-BELT_ORDER = ["yellow", "orange", "green", "blue", "red", "brown", "black"]
+BELT_ORDER = ["white", "yellow", "orange", "green", "blue", "red", "brown", "black"]
 
 
 @dataclass
