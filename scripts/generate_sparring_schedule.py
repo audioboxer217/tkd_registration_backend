@@ -247,19 +247,40 @@ def split_by_weight_and_school(entries: list[Competitor]) -> list[list[Competito
     if not size_plan:
         return []
 
-    groups = [[] for _ in size_plan]
-    max_sizes = list(size_plan)
+    # Assign competitors to contiguous weight-based groups so similar weights stay together.
+    groups: list[list[Competitor]] = []
+    offset = 0
+    for size in size_plan:
+        groups.append(list(entries[offset : offset + size]))
+        offset += size
 
-    for competitor in entries:
-        candidates = [index for index, group in enumerate(groups) if len(group) < max_sizes[index]]
-        best_index = min(
-            candidates,
-            key=lambda index: (
-                sum(1 for member in groups[index] if member.school == competitor.school),
-                len(groups[index]),
-            ),
-        )
-        groups[best_index].append(competitor)
+    # Secondary pass: swap members between adjacent groups to reduce same-school conflicts
+    # without significantly disrupting the weight-based groupings.
+    def school_conflicts(group: list[Competitor]) -> int:
+        schools = [m.school for m in group]
+        return sum(1 for school in set(schools) if schools.count(school) > 1)
+
+    changed = True
+    while changed:
+        changed = False
+        for i in range(len(groups) - 1):
+            improved = True
+            while improved:
+                improved = False
+                for a_idx, a_comp in enumerate(groups[i]):
+                    for b_idx, b_comp in enumerate(groups[i + 1]):
+                        before = school_conflicts(groups[i]) + school_conflicts(groups[i + 1])
+                        new_a = groups[i][:a_idx] + [b_comp] + groups[i][a_idx + 1:]
+                        new_b = groups[i + 1][:b_idx] + [a_comp] + groups[i + 1][b_idx + 1:]
+                        after = school_conflicts(new_a) + school_conflicts(new_b)
+                        if after < before:
+                            groups[i] = new_a
+                            groups[i + 1] = new_b
+                            improved = True
+                            changed = True
+                            break
+                    if improved:
+                        break
 
     return groups
 
