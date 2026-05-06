@@ -257,8 +257,10 @@ def split_by_weight_and_school(entries: list[Competitor]) -> list[list[Competito
     # Secondary pass: swap members between adjacent groups to reduce same-school conflicts
     # without significantly disrupting the weight-based groupings.
     def school_conflicts(group: list[Competitor]) -> int:
-        schools = [m.school for m in group]
-        return sum(1 for school in set(schools) if schools.count(school) > 1)
+        school_counts: dict[str, int] = {}
+        for member in group:
+            school_counts[member.school] = school_counts.get(member.school, 0) + 1
+        return sum(count - 1 for count in school_counts.values() if count > 1)
 
     changed = True
     while changed:
