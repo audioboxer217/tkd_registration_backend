@@ -12,16 +12,17 @@
 
 set -e
 
+BASH_SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${BASH_SOURCE_DIR}/.."
+
 # Login to AWS
 export AWS_PROFILE=gdtkd
 aws sts get-caller-identity --profile "${AWS_PROFILE}" || aws sso login --profile "${AWS_PROFILE}"
 
-BASH_SOURCE_DIR="$(dirname "${BASH_SOURCE[0]}")"
-
-uv run ${BASH_SOURCE_DIR}/generate_all_badges.py
-uv run ${BASH_SOURCE_DIR}/generate_poomsae_schedule.py
-uv run ${BASH_SOURCE_DIR}/generate_sparring_schedule.py
-uv run ${BASH_SOURCE_DIR}/generate_breaking_schedule.py
+uv run "${BASH_SOURCE_DIR}/generate_all_badges.py"
+uv run "${BASH_SOURCE_DIR}/generate_poomsae_schedule.py"
+uv run "${BASH_SOURCE_DIR}/generate_sparring_schedule.py"
+uv run "${BASH_SOURCE_DIR}/generate_breaking_schedule.py"
 
 # Move badges
 mv output/badges/*.jpg ~/Google\ Drive/My\ Drive/Personal/TKD/OKGP_Badges/ && echo "Badges moved successfully."
