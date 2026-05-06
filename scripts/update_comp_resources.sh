@@ -13,7 +13,8 @@
 set -e
 
 # Login to AWS
-aws sts get-caller-identity || aws sso login --profile gdtkd
+export AWS_PROFILE=gdtkd
+aws sts get-caller-identity --profile "${AWS_PROFILE}" || aws sso login --profile "${AWS_PROFILE}"
 
 BASH_SOURCE_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
